@@ -1,0 +1,14 @@
+*.pyc
+*.so
+*.o
+*.egg-info/
+/graspnetAPI/dump_full/
+/graspnetAPI/eval/acc_novel
+/dump_full/
+/dist/
+/build/
+/.vscode/
+/graspnms/build/
+*.npy
+*.png
+/graspnms/grasp_nms.cpp
