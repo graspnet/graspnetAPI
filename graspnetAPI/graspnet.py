@@ -37,7 +37,7 @@ __version__ = '1.0'
 
 # GraspNet Toolbox.      version 1.0
 # Data, paper, and tutorials available at:  https://graspnet.net/
-# Code written by Hao-Shu Fang and Minghao Gou, 2020.
+# Code written by Hao-Shu Fang, Minghao Gou and Chenxi Wang, 2020.
 # Licensed under the none commercial CC4.0 license [see https://graspnet.net/about]
 
 import os
@@ -117,6 +117,73 @@ class GraspNet():
 
     def __len__(self):
         return len(self.depthPath)
+
+    def check_data_completeness(self):
+        '''
+        Check whether the dataset files are complete.
+
+        **Output:**
+
+        - bool, True for complete, False for not complete.
+        '''
+        error_flag = False
+        for obj_id in tqdm(range(88), 'Checking Models'):
+            if not os.path.exists(os.path.join(self.root, 'models','%03d' % obj_id, 'nontextured.ply')):
+                error_flag = True
+                print('No nontextured.ply For Object {}'.format(obj_id))
+            if not os.path.exists(os.path.join(self.root, 'models','%03d' % obj_id, 'textured.sdf')):
+                error_flag = True
+                print('No textured.sdf For Object {}'.format(obj_id))
+            if not os.path.exists(os.path.join(self.root, 'models','%03d' % obj_id, 'textured.obj')):
+                error_flag = True
+                print('No textured.obj For Object {}'.format(obj_id))
+        for obj_id in tqdm(range(88), 'Checking Grasp Labels'):
+            if not os.path.exists(os.path.join(self.root, 'grasp_label', '%03d_labels.npz' % obj_id)):
+                error_flag = True
+                print('No Grasp Label For Object {}'.format(obj_id))
+        for sceneId in tqdm(self.sceneIds, 'Checking Collosion Labels'):
+            if not os.path.exists(os.path.join(self.root, 'collision_label', 'scene_%04d' % sceneId, 'collision_labels.npz')):
+                error_flag = True
+                print('No Collision Labels For Scene {}'.format(sceneId))
+        for sceneId in tqdm(self.sceneIds, 'Checking Scene Datas'):
+            scene_dir = os.path.join(self.root, 'scenes', 'scene_%04d' % sceneId)
+            if not os.path.exists(os.path.join(scene_dir,'object_id_list.txt')):
+                error_flag = True
+                print('No Object Id List For Scene {}'.format(sceneId))
+            if not os.path.exists(os.path.join(scene_dir,'rs_wrt_kn.npy')):
+                error_flag = True
+                print('No rs_wrt_kn.npy For Scene {}'.format(sceneId))
+            for camera in [self.camera]:
+                camera_dir = os.path.join(scene_dir, camera)
+                if not os.path.exists(os.path.join(camera_dir,'cam0_wrt_table.npy')):
+                    error_flag = True
+                    print('No cam0_wrt_table.npy For Scene {}, Camera:{}'.format(sceneId, camera))
+                if not os.path.exists(os.path.join(camera_dir,'camera_poses.npy')):
+                    error_flag = True
+                    print('No camera_poses.npy For Scene {}, Camera:{}'.format(sceneId, camera)) 
+                if not os.path.exists(os.path.join(camera_dir,'camK.npy')):
+                    error_flag = True
+                    print('No camK.npy For Scene {}, Camera:{}'.format(sceneId, camera))   
+                for annId in range(256):
+                    if not os.path.exists(os.path.join(camera_dir,'rgb','%04d.png' % annId)):
+                        error_flag = True
+                        print('No RGB Image For Scene {}, Camera:{}, annotion:{}'.format(sceneId, camera, annId))
+                    if not os.path.exists(os.path.join(camera_dir,'depth','%04d.png' % annId)):
+                        error_flag = True
+                        print('No Depth Image For Scene {}, Camera:{}, annotion:{}'.format(sceneId, camera, annId))
+                    if not os.path.exists(os.path.join(camera_dir,'label','%04d.png' % annId)):
+                        error_flag = True
+                        print('No Mask Label image For Scene {}, Camera:{}, annotion:{}'.format(sceneId, camera, annId))
+                    if not os.path.exists(os.path.join(camera_dir,'meta','%04d.mat' % annId)):
+                        error_flag = True
+                        print('No Meta Data For Scene {}, Camera:{}, annotion:{}'.format(sceneId, camera, annId))
+                    if not os.path.exists(os.path.join(camera_dir,'annotations','%04d.xml' % annId)):
+                        error_flag = True
+                        print('No Annotations For Scene {}, Camera:{}, annotion:{}'.format(sceneId, camera, annId))
+                    if not os.path.exists(os.path.join(camera_dir,'rectangle_grasp','%04d.npy' % annId)):
+                        error_flag = True
+                        print('No Rectangle Labels For Scene {}, Camera:{}, annotion:{}'.format(sceneId, camera, annId))
+        return not error_flag
 
     def getSceneIds(self, objIds=None):
         '''
@@ -600,7 +667,7 @@ class GraspNet():
         '''
         if format == '6d':
             geometries = []
-            sceneGrasp = self.loadGrasp(sceneId = sceneId, annId = annId, camera = camera, format = '6d', grasp_thresh = coef_fric_thresh)
+            sceneGrasp = self.loadGrasp(sceneId = sceneId, annId = annId, camera = camera, format = '6d', fric_coef_thresh = coef_fric_thresh)
             sceneGrasp = sceneGrasp.random_sample(numGrasp = numGrasp)
             scenePCD = self.loadScenePointCloud(sceneId = sceneId, camera = camera, annId = annId, align = False)
             geometries.append(scenePCD)
@@ -611,9 +678,9 @@ class GraspNet():
             o3d.visualization.draw_geometries(geometries)
         elif format == 'rect':
             bgr = self.loadBGR(sceneId = sceneId, camera = camera, annId = annId)
-            sceneGrasp = self.loadGrasp(sceneId = sceneId, camera = camera, annId = annId, format = 'rect', grasp_thresh = coef_fric_thresh)
+            sceneGrasp = self.loadGrasp(sceneId = sceneId, camera = camera, annId = annId, format = 'rect', fric_coef_thresh = coef_fric_thresh)
             sceneGrasp = sceneGrasp.random_sample(numGrasp = numGrasp)
-            img = sceneGrasp.to_opencv_image(bgr, num_grasp = numGrasp)
+            img = sceneGrasp.to_opencv_image(bgr, numGrasp = numGrasp)
             cv2.imshow('Rectangle Grasps',img)
             cv2.waitKey(0)
             cv2.destroyAllWindows()

@@ -569,3 +569,55 @@ def batch_key_points_2_tuple(key_points, scores, object_ids, camera):
     heights = np.linalg.norm(lefts - rights, axis=-1, keepdims=True)
     tuples = np.concatenate([centers, opens, heights, scores[:, np.newaxis], object_ids[:, np.newaxis]], axis=-1).astype(np.float32)
     return tuples
+
+def framexy_depth_2_xyz(pixel_x, pixel_y, depth, camera):
+    '''
+    **Input:**
+
+    - pixel_x: int of the pixel x coordinate.
+    
+    - pixel_y: int of the pixle y coordicate.
+    
+    - depth: float of depth. The unit is millimeter.
+    
+    - camera: string of type of camera. "realsense" or "kinect".
+    
+    **Output:**
+    
+    - x, y, z: float of x, y and z coordinates in camera frame. The unit is millimeter.
+    '''
+    intrinsics = get_camera_intrinsic(camera)
+    fx, fy = intrinsics[0,0], intrinsics[1,1]
+    cx, cy = intrinsics[0,2], intrinsics[1,2]
+    z = depth # mm
+    x = z / fx * (pixel_x - cx) # mm
+    y = z / fy * (pixel_y - cy) # mm
+    return x, y, z
+
+def batch_framexy_depth_2_xyz(pixel_x, pixel_y, depth, camera):
+    '''
+    **Input:**
+
+    - pixel_x: numpy array of int of the pixel x coordinate. shape: (-1,)
+
+    - pixel_y: numpy array of int of the pixle y coordicate. shape: (-1,)
+
+    - depth: numpy array of float of depth. The unit is millimeter. shape: (-1,)
+
+    - camera: string of type of camera. "realsense" or "kinect".
+
+    **Output:**
+
+    x, y, z: numpy array of float of x, y and z coordinates in camera frame. The unit is millimeter.
+    '''
+    intrinsics = get_camera_intrinsic(camera)
+    fx, fy = intrinsics[0,0], intrinsics[1,1]
+    cx, cy = intrinsics[0,2], intrinsics[1,2]
+    z = depth # mm
+    x = z / fx * (pixel_x - cx) # mm
+    y = z / fy * (pixel_y - cy) # mm
+    return x, y, z
+
+def center_depth(depths, center, open_point, upper_point):
+    '''
+    

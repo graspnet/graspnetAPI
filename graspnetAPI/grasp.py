@@ -5,7 +5,7 @@ import numpy as np
 import open3d as o3d
 import copy
 import cv2
-from .utils.utils import plot_gripper_pro_max, batch_rgbdxyz_2_rgbxy_depth, get_batch_key_points, batch_key_points_2_tuple
+from .utils.utils import plot_gripper_pro_max, batch_rgbdxyz_2_rgbxy_depth, get_batch_key_points, batch_key_points_2_tuple, framexy_depth_2_xyz, batch_framexy_depth_2_xyz
 GRASP_ARRAY_LEN = 17
 RECT_GRASP_ARRAY_LEN = 7
 
@@ -413,10 +413,36 @@ class RectGrasp():
         cv2.line(opencv_rgb, (int(p3[0]),int(p3[1])), (int(p4[0]),int(p4[1])), (0,0,255), 1, 8)
         cv2.line(opencv_rgb, (int(p4[0]),int(p4[1])), (int(p1[0]),int(p1[1])), (255,0,0), 3, 8)
         return opencv_rgb
+
+    def get_key_point(self):
+        '''
+        **Output:**
+
+        - center, open_point, upper_point, each of them is a numpy array of shape (2,)
+        '''
+        open_point = np.array(self.open_point())
+        center = np.array(self.center_point())
+        height = self.height()
+        open_point_vector = open_point - center
+        unit_open_point_vector = open_point_vector / np.linalg.norm(open_point_vector)
+        counter_clock_wise_rotation_matrix = np.array([[0,-1], [1, 0]])
+        upper_point = np.dot(counter_clock_wise_rotation_matrix, unit_open_point_vector) * height / 2 + center
+        return center, open_point, upper_point
+
+    def to_grasp(self, camera, depths, depth_method):
+        center, open_point, upper_point = self.get_key_point()
+        depth_2d = depth_method(depths, center, open_point, upper_point)
+        center_xyz = np.array(framexy_depth_2_xyz(center[0], center[1], depth_2d, camera))
+        open_point_xyz = np.array(framexy_depth_2_xyz(open_point[0], open_point[1], depth_2d, camera))
+        upper_point_xyz = np.array(framexy_depth_2_xyz(upper_point[0], upper_point[1], depth_2d, camera))
+        depth = 0.02
+        height = np.linalg.norm(upper_point_xyz - center_xyz) * 2 / 1000.0
+        width = np.linalg.norm(open_point_xyz - center_xyz) * 2 / 1000.0
+        score = self.score()
+        object_id = self.object_id()
+        translation = center_xyz
         
-    def to_grasp(self, camera_intrinsics, depths, depth_method):
-        pass
-    
+
 class RectGraspGroup():
     def __init__(self, *args):
         '''
