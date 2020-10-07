@@ -109,7 +109,7 @@ class GraspNet():
                 self.metaPath.append(os.path.join(
                     root, 'scenes', 'scene_'+str(i).zfill(4), camera, 'meta', str(img_num).zfill(4)+'.mat'))
                 self.rectLabelPath.append(os.path.join(
-                    root, 'scenes', 'scene_'+str(i).zfill(4), camera, 'rectangle_grasp', str(img_num).zfill(4)+'.npy'))
+                    root, 'scenes', 'scene_'+str(i).zfill(4), camera, 'rect', str(img_num).zfill(4)+'.npy'))
                 self.sceneName.append('scene_'+str(i).zfill(4))
                 self.annId.append(img_num)
 
@@ -180,7 +180,7 @@ class GraspNet():
                     if not os.path.exists(os.path.join(camera_dir,'annotations','%04d.xml' % annId)):
                         error_flag = True
                         print('No Annotations For Scene {}, Camera:{}, annotion:{}'.format(sceneId, camera, annId))
-                    if not os.path.exists(os.path.join(camera_dir,'rectangle_grasp','%04d.npy' % annId)):
+                    if not os.path.exists(os.path.join(camera_dir,'rect','%04d.npy' % annId)):
                         error_flag = True
                         print('No Rectangle Labels For Scene {}, Camera:{}, annotion:{}'.format(sceneId, camera, annId))
         return not error_flag
@@ -583,19 +583,21 @@ class GraspNet():
                 grasp_group.grasp_group_array = np.concatenate((grasp_group.grasp_group_array, obj_grasp_array))
             return grasp_group
         else:
+            import copy
             # 'rect'
             # for rectangle grasp, collision labels and grasp labels are not necessray. 
             ##################### OLD LABEL ################
             ############### MODIFICATION NEEDED ############
-            rect_grasp_label = np.load(os.path.join(self.root,'scenes','scene_%04d' % sceneId,camera,'rectangle_grasp','%04d.npy' % annId))
-            mask = rect_grasp_label[:,5] <= fric_coef_thresh
+            rect_grasp_label = np.load(os.path.join(self.root,'scenes','scene_%04d' % sceneId,camera,'rect','%04d.npy' % annId))
+            mask = rect_grasp_label[:,5] >= (1.1 - fric_coef_thresh)
             rect_grasp_label = rect_grasp_label[mask]
-            num_grasp = len(rect_grasp_label)
+            # num_grasp = len(rect_grasp_label)
             rect_grasp = RectGraspGroup()
-            rect_grasp.rect_grasp_group_array = np.zeros((num_grasp, RECT_GRASP_ARRAY_LEN), dtype = np.float32)
-            rect_grasp.rect_grasp_group_array[:,:6] = rect_grasp_label
-            rect_grasp.rect_grasp_group_array[:,5] = 1.1 - rect_grasp.rect_grasp_group_array[:,5]
-            rect_grasp.rect_grasp_group_array[:,6] = np.ones((num_grasp))
+            rect_grasp.rect_grasp_group_array = copy.deepcopy(rect_grasp_label)
+            # rect_grasp.rect_grasp_group_array = np.zeros((num_grasp, RECT_GRASP_ARRAY_LEN), dtype = np.float32)
+            # rect_grasp.rect_grasp_group_array[:,:6] = rect_grasp_label
+            # rect_grasp.rect_grasp_group_array[:,5] = 1.1 - rect_grasp.rect_grasp_group_array[:,5]
+            # rect_grasp.rect_grasp_group_array[:,6] = np.ones((num_grasp))
             return rect_grasp
 
     def loadData(self, ids=None, *extargs):
@@ -633,7 +635,7 @@ class GraspNet():
             depthPath = os.path.join(self.root, 'scenes', 'scene_'+str(sceneId).zfill(4), camera, 'depth', str(annId).zfill(4)+'.png')
             segLabelPath = os.path.join(self.root, 'scenes', 'scene_'+str(sceneId).zfill(4), camera, 'label', str(annId).zfill(4)+'.png')
             metaPath = os.path.join(self.root, 'scenes', 'scene_'+str(sceneId).zfill(4), camera, 'meta', str(annId).zfill(4)+'.mat')
-            rectLabelPath = os.path.join(self.root, 'scenes', 'scene_'+str(sceneId).zfill(4), camera, 'rectangle_grasp', str(annId).zfill(4)+'.npy')
+            rectLabelPath = os.path.join(self.root, 'scenes', 'scene_'+str(sceneId).zfill(4), camera, 'rect', str(annId).zfill(4)+'.npy')
             scene_name = 'scene_'+str(sceneId).zfill(4)
             return (rgbPath, depthPath, segLabelPath, metaPath, rectLabelPath, scene_name,annId)
 
