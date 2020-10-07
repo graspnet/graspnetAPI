@@ -301,7 +301,7 @@ class GraspGroup():
 
         **Output:**
         
-        - RectGraspGroup instance.
+        - RectGraspGroup instance or None.
         '''
         tranlations = self.translations()
         rotations = self.rotation_matrices()
@@ -317,6 +317,9 @@ class GraspGroup():
         scores = scores[mask]
         rotations = rotations[mask]
         object_ids = object_ids[mask]
+        
+        if tranlations.shape[0] == 0:
+            return None
 
         k_points = get_batch_key_points(tranlations, rotations, widths)
         k_points = k_points.reshape([-1, 3])
