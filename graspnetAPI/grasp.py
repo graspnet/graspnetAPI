@@ -5,7 +5,8 @@ import numpy as np
 import open3d as o3d
 import copy
 import cv2
-from .utils.utils import plot_gripper_pro_max, batch_rgbdxyz_2_rgbxy_depth, get_batch_key_points, batch_key_points_2_tuple, framexy_depth_2_xyz, batch_framexy_depth_2_xyz, center_depth, key_point_2_rotation
+from .utils.utils import plot_gripper_pro_max, batch_rgbdxyz_2_rgbxy_depth, get_batch_key_points, batch_key_points_2_tuple, framexy_depth_2_xyz, batch_framexy_depth_2_xyz, center_depth, key_point_2_rotation, batch_center_depth, batch_framexy_depth_2_xyz, batch_key_point_2_rotation
+
 GRASP_ARRAY_LEN = 17
 RECT_GRASP_ARRAY_LEN = 7
 
@@ -414,7 +415,7 @@ class RectGrasp():
         cv2.line(opencv_rgb, (int(p4[0]),int(p4[1])), (int(p1[0]),int(p1[1])), (255,0,0), 3, 8)
         return opencv_rgb
 
-    def get_key_point(self):
+    def get_key_points(self):
         '''
         **Output:**
 
@@ -430,7 +431,7 @@ class RectGrasp():
         return center, open_point, upper_point
 
     def to_grasp(self, camera, depths, depth_method = center_depth):
-        center, open_point, upper_point = self.get_key_point()
+        center, open_point, upper_point = self.get_key_points()
         depth_2d = depth_method(depths, center, open_point, upper_point) / 1000.0
         center_xyz = np.array(framexy_depth_2_xyz(center[0], center[1], depth_2d, camera))
         open_point_xyz = np.array(framexy_depth_2_xyz(open_point[0], open_point[1], depth_2d, camera))
@@ -511,6 +512,46 @@ class RectGraspGroup():
         '''
         self.rect_grasp_group_array = np.concatenate((self.rect_grasp_group_array, rect_grasp.rect_grasp_array.reshape((-1, RECT_GRASP_ARRAY_LEN))))
 
+    def scores(self):
+        '''
+        **Output:**
+
+        - numpy array of the scores.
+        '''
+        return self.rect_grasp_group_array[:, 5]
+
+    def heights(self):
+        '''
+        **Output:**
+
+        - numpy array of the heights.
+        '''
+        return self.rect_grasp_group_array[:, 4]
+    
+    def open_points(self):
+        '''
+        **Output:**
+
+        - numpy array the open points of shape (-1, 2).
+        '''
+        return self.rect_grasp_group_array[:, 2:4]
+
+    def center_points(self):
+        '''
+        **Output:**
+
+        - numpy array the center points of shape (-1, 2).
+        '''
+        return self.rect_grasp_group_array[:, 0:2]
+
+    def object_ids(self):
+        '''
+        **Output:**
+
+        - numpy array of the object ids that this grasp grasps.
+        '''
+        return np.round(self.rect_grasp_group_array[:, 6]).astype(np.int32)
+
     def remove(self, index):
         '''
         **Input:**
@@ -569,8 +610,37 @@ class RectGraspGroup():
             cv2.line(img, (int(p4[0]),int(p4[1])), (int(p1[0]),int(p1[1])), (255,0,0), 3, 8)
         return img
 
-    def to_grasp_group(self, camera_intrinsics, depths, depth_method):
-        pass
+    def batch_get_key_points(self):
+        '''
+        **Output:**
+
+        - center, open_point, upper_point, each of them is a numpy array of shape (2,)
+        '''
+        open_points = self.open_points() # (-1, 2)
+        centers = self.center_points() # (-1, 2)
+        heights = self.heights().reshape((-1, 1)) # (-1, )
+        open_point_vector = open_points - centers
+        unit_open_point_vector = open_point_vector / np.linalg.norm(open_point_vector, axis = 1) # (-1, 2)
+        counter_clock_wise_rotation_matrix = np.array([[0,-1], [1, 0]])
+        upper_points = np.dot(counter_clock_wise_rotation_matrix, unit_open_point_vector.reshape(-1, 2, 1)).reshape(-1, 2) * np.hstack([heights, heights]) / 2 + centers # (-1, 2)
+        return centers, open_points, upper_points
+
+    def to_grasp_group(self, camera, depths, depth_method = batch_center_depth):
+        centers, open_points, upper_points = self.batch_get_key_points()
+        depths_2d = depth_method(depths, centers, open_points, upper_points) / 1000.0
+        centers_xyz = np.array(batch_framexy_depth_2_xyz(centers[:, 0], centers[:, 1], depths_2d, camera)).reshape(-1, 3)
+        open_points_xyz = np.array(batch_framexy_depth_2_xyz(open_points[:, 0], open_points[:, 1], depths_2d, camera)).reshape(-1, 3)
+        upper_points_xyz = np.array(batch_framexy_depth_2_xyz(upper_points[:, 0], upper_points[:, 1], depths_2d, camera)).reshape(-1, 3)
+        depths = 0.02 * np.ones((self.__len__(), 1))
+        heights = (np.linalg.norm(upper_points_xyz - centers_xyz, axis = 1) * 2).reshape((-1, 1))
+        widths = (np.linalg.norm(open_points_xyz - centers_xyz, axis = 1) * 2).reshape((-1, 1))
+        scores = self.scores().reshape((-1, 1))
+        object_ids = self.object_ids().reshape((-1, 1))
+        translations = centers_xyz
+        rotations = batch_key_point_2_rotation(centers_xyz, open_points_xyz, upper_points_xyz).reshape((-1, 9))
+        grasp_group = GraspGroup()
+        grasp_group.grasp_group_array = np.hstack((scores, widths, heights, depths, rotations, translations, object_ids))
+        return grasp_group
 
     def sort_by_score(self, reverse = False):
         '''

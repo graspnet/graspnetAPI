@@ -636,6 +636,26 @@ def center_depth(depths, center, open_point, upper_point):
     '''
     return depths[round(center[1]), round(center[0])]
 
+def batch_center_depth(depths, centers, open_points, upper_points):
+    '''
+    **Input:**
+
+    - depths: numpy array of the depths.
+
+    - centers: numpy array of the center points of shape(-1, 2).
+
+    - open_points: numpy array of the open points of shape(-1, 2).
+
+    - upper_points: numpy array of the upper points of shape(-1, 2).
+
+    **Output:**
+
+    - depths: numpy array of the grasp depth of shape (-1).
+    '''
+    x = np.round(centers[:,0]).astype(np.int32)
+    y = np.round(centers[:,1]).astype(np.int32)
+    return depths[y, x]
+
 def key_point_2_rotation(center_xyz, open_point_xyz, upper_point_xyz):
     '''
     **Input:**
@@ -660,3 +680,28 @@ def key_point_2_rotation(center_xyz, open_point_xyz, upper_point_xyz):
         unit_upper_point_vector.reshape((-1, 1))
     ))
     return rotation
+
+def batch_key_point_2_rotation(centers_xyz, open_points_xyz, upper_points_xyz):
+    '''
+    **Input:**
+
+    - centers_xyz: numpy array of the center points of shape (-1, 3).
+
+    - open_points_xyz: numpy array of the open points of shape (-1, 3).
+
+    - upper_points_xyz: numpy array of the upper points of shape (-1, 3).
+
+    **Output:**
+
+    - rotations: numpy array of the rotation matrix of shape (-1, 3, 3).
+    '''
+    open_points_vector = open_points_xyz - centers_xyz # (-1, 3)
+    upper_points_vector = upper_points_xyz - centers_xyz # (-1, 3)
+    open_point_norm = np.linalg.norm(open_points_vector, axis = 1).reshape(-1, 1)
+    upper_point_norm = np.linalg.norm(upper_points_vector, axis = 1).reshape(-1, 1)
+    unit_open_points_vector = open_points_vector / np.hstack((open_point_norm, open_point_norm, open_point_norm)) # (-1, 3)
+    unit_upper_points_vector = upper_points_vector / np.hstack((upper_point_norm, upper_point_norm, upper_point_norm)) # (-1, 3)
+    num = open_points_vector.shape[0]
+    x_axis = np.hstack((np.zeros((num, 1)), np.zeros((num, 1)), np.ones((num, 1)))).astype(np.float32).reshape(-1, 3, 1)
+    rotations = np.zstack((x_axis, unit_open_points_vector.reshape((-1, 3, 1)), unit_upper_points_vector.reshape((-1, 3, 1))))
+    return rotations
