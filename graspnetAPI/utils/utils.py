@@ -695,13 +695,16 @@ def batch_key_point_2_rotation(centers_xyz, open_points_xyz, upper_points_xyz):
 
     - rotations: numpy array of the rotation matrix of shape (-1, 3, 3).
     '''
+    # print('open_points_xyz:{}'.format(open_points_xyz))
+    # print('upper_points_xyz:{}'.format(upper_points_xyz))
     open_points_vector = open_points_xyz - centers_xyz # (-1, 3)
     upper_points_vector = upper_points_xyz - centers_xyz # (-1, 3)
     open_point_norm = np.linalg.norm(open_points_vector, axis = 1).reshape(-1, 1)
     upper_point_norm = np.linalg.norm(upper_points_vector, axis = 1).reshape(-1, 1)
+    # print('open_point_norm:{}, upper_point_norm:{}'.format(open_point_norm, upper_point_norm))
     unit_open_points_vector = open_points_vector / np.hstack((open_point_norm, open_point_norm, open_point_norm)) # (-1, 3)
     unit_upper_points_vector = upper_points_vector / np.hstack((upper_point_norm, upper_point_norm, upper_point_norm)) # (-1, 3)
     num = open_points_vector.shape[0]
     x_axis = np.hstack((np.zeros((num, 1)), np.zeros((num, 1)), np.ones((num, 1)))).astype(np.float32).reshape(-1, 3, 1)
-    rotations = np.zstack((x_axis, unit_open_points_vector.reshape((-1, 3, 1)), unit_upper_points_vector.reshape((-1, 3, 1))))
+    rotations = np.dstack((x_axis, unit_open_points_vector.reshape((-1, 3, 1)), unit_upper_points_vector.reshape((-1, 3, 1))))
     return rotations

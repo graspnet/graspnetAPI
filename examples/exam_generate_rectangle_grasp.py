@@ -1,8 +1,8 @@
 __author__ = 'mhgou'
 __version__ = '1.0'
 
-# GraspNetAPI example for loading grasp for a scene.
-# change the graspnet_root path
+# GraspNetAPI example for generating rectangle grasp from 6d grasp.
+# change the graspnet_root path and NUM_PROCESS
 
 from graspnetAPI import GraspNet
 from graspnetAPI.graspnet import TOTAL_SCENE_NUM
@@ -10,7 +10,9 @@ import os
 import numpy as np
 from tqdm import tqdm
 
-
+######################################################################
+NUM_PROCESS = 24 # change NUM_PROCESS to the number of cores to use. #
+######################################################################
 
 def generate_scene_rectangle_grasp(sceneId, dump_folder, camera):
     g = GraspNet(graspnet_root, camera=camera, split='all')
@@ -30,20 +32,22 @@ def generate_scene_rectangle_grasp(sceneId, dump_folder, camera):
 
 if __name__ == '__main__':
     ####################################################################
-    graspnet_root = '/home/minghao/graspnet'  ### ROOT PATH FOR GRASPNET ###
+    graspnet_root = '/home/minghao/graspnet' # ROOT PATH FOR GRASPNET ##
     ####################################################################
-
-    from multiprocessing import Pool
 
     dump_folder = 'rect_labels'
     if not os.path.exists(dump_folder):
         os.mkdir(dump_folder)
-    pool = Pool(24)
 
-    for camera in ['realsense', 'kinect']:
-        # initialize a GraspNet instance
-        for sceneId in range(120):
-            pool.apply_async(func = generate_scene_rectangle_grasp, args = (sceneId, dump_folder, camera))
-    pool.close()
-    pool.join()
+    if NUM_PROCESS > 1:
+        from multiprocessing import Pool
+        pool = Pool(24)
+        for camera in ['realsense', 'kinect']:
+            for sceneId in range(120):
+                pool.apply_async(func = generate_scene_rectangle_grasp, args = (sceneId, dump_folder, camera))
+        pool.close()
+        pool.join()
     
+    else:
+        generate_scene_rectangle_grasp(sceneId, dump_folder, camera)
+

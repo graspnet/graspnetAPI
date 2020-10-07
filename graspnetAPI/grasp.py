@@ -5,6 +5,7 @@ import numpy as np
 import open3d as o3d
 import copy
 import cv2
+
 from .utils.utils import plot_gripper_pro_max, batch_rgbdxyz_2_rgbxy_depth, get_batch_key_points, batch_key_points_2_tuple, framexy_depth_2_xyz, batch_framexy_depth_2_xyz, center_depth, key_point_2_rotation, batch_center_depth, batch_framexy_depth_2_xyz, batch_key_point_2_rotation
 
 GRASP_ARRAY_LEN = 17
@@ -431,8 +432,24 @@ class RectGrasp():
         return center, open_point, upper_point
 
     def to_grasp(self, camera, depths, depth_method = center_depth):
+        '''
+        **Input:**
+
+        - camera: string of type of camera, 'kinect' or 'realsense'.
+
+        - depths: numpy array of the depths image.
+
+        - depth_method: function of calculating the depth.
+
+        **Output:**
+
+        - grasp: Grasp instance of None if the depth is not valid.
+        '''
         center, open_point, upper_point = self.get_key_points()
         depth_2d = depth_method(depths, center, open_point, upper_point) / 1000.0
+        # print('depth 2d:{}'.format(depth_2d))
+        if abs(depth_2d) < 1e-5:
+            return None
         center_xyz = np.array(framexy_depth_2_xyz(center[0], center[1], depth_2d, camera))
         open_point_xyz = np.array(framexy_depth_2_xyz(open_point[0], open_point[1], depth_2d, camera))
         upper_point_xyz = np.array(framexy_depth_2_xyz(upper_point[0], upper_point[1], depth_2d, camera))
@@ -620,22 +637,50 @@ class RectGraspGroup():
         centers = self.center_points() # (-1, 2)
         heights = self.heights().reshape((-1, 1)) # (-1, )
         open_point_vector = open_points - centers
-        unit_open_point_vector = open_point_vector / np.linalg.norm(open_point_vector, axis = 1) # (-1, 2)
+        norm_open_point_vector = np.linalg.norm(open_point_vector, axis = 1).reshape(-1, 1)
+        unit_open_point_vector = open_point_vector / np.hstack((norm_open_point_vector, norm_open_point_vector)) # (-1, 2)
         counter_clock_wise_rotation_matrix = np.array([[0,-1], [1, 0]])
         upper_points = np.dot(counter_clock_wise_rotation_matrix, unit_open_point_vector.reshape(-1, 2, 1)).reshape(-1, 2) * np.hstack([heights, heights]) / 2 + centers # (-1, 2)
         return centers, open_points, upper_points
 
     def to_grasp_group(self, camera, depths, depth_method = batch_center_depth):
+        '''
+        **Input:**
+
+        - camera: string of type of camera, 'kinect' or 'realsense'.
+
+        - depths: numpy array of the depths image.
+
+        - depth_method: function of calculating the depth.
+
+        **Output:**
+
+        - grasp_group: GraspGroup instance or None.
+
+        ## The number may not be the same to the input as some depth may be invalid. ##
+        '''
         centers, open_points, upper_points = self.batch_get_key_points()
+        # print(f'centers:{centers}\nopen points:{open_points}\nupper points:{upper_points}')
         depths_2d = depth_method(depths, centers, open_points, upper_points) / 1000.0
-        centers_xyz = np.array(batch_framexy_depth_2_xyz(centers[:, 0], centers[:, 1], depths_2d, camera)).reshape(-1, 3)
-        open_points_xyz = np.array(batch_framexy_depth_2_xyz(open_points[:, 0], open_points[:, 1], depths_2d, camera)).reshape(-1, 3)
-        upper_points_xyz = np.array(batch_framexy_depth_2_xyz(upper_points[:, 0], upper_points[:, 1], depths_2d, camera)).reshape(-1, 3)
-        depths = 0.02 * np.ones((self.__len__(), 1))
+        # print(f'depths_3d:{depths_2d}')
+        valid_mask = np.abs(depths_2d) > 1e-5
+        # print(f'valid_mask:{valid_mask}')
+        centers = centers[valid_mask]
+        open_points = open_points[valid_mask]
+        upper_points = upper_points[valid_mask]
+        # print(f'## After filtering\ncenters:{centers}\nopen points:{open_points}\nupper points:{upper_points}')
+        depths_2d = depths_2d[valid_mask]
+        valid_num = centers.shape[0]
+        if valid_num == 0:
+            return None
+        centers_xyz = np.array(batch_framexy_depth_2_xyz(centers[:, 0], centers[:, 1], depths_2d, camera)).T
+        open_points_xyz = np.array(batch_framexy_depth_2_xyz(open_points[:, 0], open_points[:, 1], depths_2d, camera)).T
+        upper_points_xyz = np.array(batch_framexy_depth_2_xyz(upper_points[:, 0], upper_points[:, 1], depths_2d, camera)).T
+        depths = 0.02 * np.ones((valid_num, 1))
         heights = (np.linalg.norm(upper_points_xyz - centers_xyz, axis = 1) * 2).reshape((-1, 1))
         widths = (np.linalg.norm(open_points_xyz - centers_xyz, axis = 1) * 2).reshape((-1, 1))
-        scores = self.scores().reshape((-1, 1))
-        object_ids = self.object_ids().reshape((-1, 1))
+        scores = self.scores()[valid_mask].reshape((-1, 1))
+        object_ids = self.object_ids()[valid_mask].reshape((-1, 1))
         translations = centers_xyz
         rotations = batch_key_point_2_rotation(centers_xyz, open_points_xyz, upper_points_xyz).reshape((-1, 9))
         grasp_group = GraspGroup()
