@@ -620,4 +620,43 @@ def batch_framexy_depth_2_xyz(pixel_x, pixel_y, depth, camera):
 
 def center_depth(depths, center, open_point, upper_point):
     '''
-    
+    **Input:**
+
+    - depths: numpy array of the depths.
+
+    - center: numpy array of the center point.
+
+    - open_point: numpy array of the open point.
+
+    - upper_point: numpy array of the upper point.
+
+    **Output:**
+
+    - depth: float of the grasp depth.
+    '''
+    return depths[round(center[1]), round(center[0])]
+
+def key_point_2_rotation(center_xyz, open_point_xyz, upper_point_xyz):
+    '''
+    **Input:**
+
+    - center_xyz: numpy array of the center point.
+
+    - open_point_xyz: numpy array of the open point.
+
+    - upper_point_xyz: numpy array of the upper point.
+
+    **Output:**
+
+    - rotation: numpy array of the rotation matrix.
+    '''
+    open_point_vector = open_point_xyz - center_xyz
+    upper_point_vector = upper_point_xyz - center_xyz
+    unit_open_point_vector = open_point_vector / np.linalg.norm(open_point_vector)
+    unit_upper_point_vector = upper_point_vector / np.linalg.norm(upper_point_vector)
+    rotation = np.hstack((
+        np.array([[0],[0],[1.0]]), 
+        unit_open_point_vector.reshape((-1, 1)), 
+        unit_upper_point_vector.reshape((-1, 1))
+    ))
+    return rotation

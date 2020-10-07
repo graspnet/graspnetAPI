@@ -5,7 +5,7 @@ import numpy as np
 import open3d as o3d
 import copy
 import cv2
-from .utils.utils import plot_gripper_pro_max, batch_rgbdxyz_2_rgbxy_depth, get_batch_key_points, batch_key_points_2_tuple, framexy_depth_2_xyz, batch_framexy_depth_2_xyz
+from .utils.utils import plot_gripper_pro_max, batch_rgbdxyz_2_rgbxy_depth, get_batch_key_points, batch_key_points_2_tuple, framexy_depth_2_xyz, batch_framexy_depth_2_xyz, center_depth, key_point_2_rotation
 GRASP_ARRAY_LEN = 17
 RECT_GRASP_ARRAY_LEN = 7
 
@@ -27,7 +27,7 @@ class Grasp():
                 raise TypeError('if only one arg is given, it must be np.ndarray.')
         elif len(args) == 7:
             score, width, height, depth, rotation_matrix, translation, object_id = args
-            self.grasp_array = np.concatenate([np.array((score, width, height, depth)),rotation_matrix.reshape(-1), translation, np.array((object_id))]).astype(np.float32)
+            self.grasp_array = np.concatenate([np.array((score, width, height, depth)),rotation_matrix.reshape(-1), translation, np.array((object_id)).reshape(-1)]).astype(np.float32)
         else:
             raise ValueError('only 1 or 7 arguments are accepted')
     
@@ -429,19 +429,20 @@ class RectGrasp():
         upper_point = np.dot(counter_clock_wise_rotation_matrix, unit_open_point_vector) * height / 2 + center
         return center, open_point, upper_point
 
-    def to_grasp(self, camera, depths, depth_method):
+    def to_grasp(self, camera, depths, depth_method = center_depth):
         center, open_point, upper_point = self.get_key_point()
-        depth_2d = depth_method(depths, center, open_point, upper_point)
+        depth_2d = depth_method(depths, center, open_point, upper_point) / 1000.0
         center_xyz = np.array(framexy_depth_2_xyz(center[0], center[1], depth_2d, camera))
         open_point_xyz = np.array(framexy_depth_2_xyz(open_point[0], open_point[1], depth_2d, camera))
         upper_point_xyz = np.array(framexy_depth_2_xyz(upper_point[0], upper_point[1], depth_2d, camera))
         depth = 0.02
-        height = np.linalg.norm(upper_point_xyz - center_xyz) * 2 / 1000.0
-        width = np.linalg.norm(open_point_xyz - center_xyz) * 2 / 1000.0
+        height = np.linalg.norm(upper_point_xyz - center_xyz) * 2
+        width = np.linalg.norm(open_point_xyz - center_xyz) * 2 
         score = self.score()
         object_id = self.object_id()
         translation = center_xyz
-        
+        rotation = key_point_2_rotation(center_xyz, open_point_xyz, upper_point_xyz)
+        return Grasp(score, width, height, depth, rotation, translation, object_id)
 
 class RectGraspGroup():
     def __init__(self, *args):
