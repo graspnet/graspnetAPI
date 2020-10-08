@@ -15,7 +15,15 @@ bash install.sh
 cd examples
 
 # change the path of graspnet root
+
+# How to load labels from graspnet.
 python3 exam_loadGrasp.py
+
+# How to convert between 6d and rectangle grasps.
+python3 exam_convert.py
+
+# Check the completeness of the data.
+python3 exam_check_data.py
 
 # you can also run other examples
 
