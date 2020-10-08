@@ -61,7 +61,7 @@ class GraspNetEval(GraspNet):
             pose_list.append(mat)
         return obj_list, pose_list, camera_pose, align_mat
         
-    def eval_scene(self, scene_id, camera, dump_folder):
+    def eval_scene(self, scene_id, camera, grasp_group):
         model_dir = os.path.join(self.root, 'models')
         dexmodel_dir = os.path.join(self.root, 'models')
         scene_dir = os.path.join(self.root, 'scenes')
@@ -86,13 +86,13 @@ class GraspNetEval(GraspNet):
         scene_accuracy = []
         for ann_id in range(256):
             print('scene id:{}, ann id:{}'.format(scene_id, ann_id))
-            grasps = np.array(np.load(os.path.join(dump_folder,get_scene_name(scene_id), camera, '%04d.npz' % (ann_id,)))['preds'][0])
+            # grasps = np.array(np.load(os.path.join(dump_folder,get_scene_name(scene_id), camera, '%04d.npz' % (ann_id,)))['preds'][0])
             obj_list, pose_list, camera_pose, align_mat = self.get_model_poses(scene_id, ann_id, camera=camera)
             table_trans = transform_points(table, np.linalg.inv(np.matmul(align_mat, camera_pose)))
 
             # model level list
             tic = time.time()
-            grasp_list, score_list, collision_mask_list = eval_grasp(grasps, model_sampled_list, dexmodel_list, pose_list, config, table=table_trans, voxel_size=0.008)
+            grasp_list, score_list, collision_mask_list = eval_grasp(grasp_group, model_sampled_list, dexmodel_list, pose_list, config, table=table_trans, voxel_size=0.008)
             toc = time.time()
 
             # concat into scene level
