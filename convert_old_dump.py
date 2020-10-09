@@ -40,14 +40,30 @@ def convert_dump(src_path, dst_path):
     
     rotations = batch_viewpoint_params_to_matrix(app_vectors, angles).reshape(-1, 9)
     angles = angles.reshape((-1, 1))
-    print(f'scores:{scores}, widths:{widths}, heights:{heights}, depths:{depths}, tranlations:{translations}, rotations:{rotations}, object_ids:{object_ids}')
+    # print(f'scores:{scores}, widths:{widths}, heights:{heights}, depths:{depths}, tranlations:{translations}, rotations:{rotations}, object_ids:{object_ids}')
     grasp_group = GraspGroup(np.hstack((scores, widths, heights, depths, rotations, translations, object_ids)))
     grasp_group.save_npy(dst_path)
 
 if __name__ == '__main__':
-    src_path = '0000.npz'
-    dst_path = 's100_k_0.npy'
-    convert_dump(src_path, dst_path)
+    import os
+    from tqdm import tqdm
+    old_dump_path = '/home/minghao/hdd/dump_full_newdata_pretrained'
+    new_dump_path = '/home/minghao/hdd/dump_new_pretrained'
+    if not os.path.exists(new_dump_path):
+        os.mkdir(new_dump_path)
+    for scene_folder in tqdm(os.listdir(old_dump_path), 'convert scenes'):
+        # scene_dir = os.path.join(old_dump_path, scene_folder)
+        old_camera_dir = os.path.join(old_dump_path, scene_folder, 'kinect')
+        new_camera_dir = os.path.join(new_dump_path, scene_folder, 'kinect')
+        if not os.path.exists(new_camera_dir):
+            os.makedirs(new_camera_dir)
+        for ann_id in range(256):
+            src_path = os.path.join(old_camera_dir,'%04d.npz' % ann_id)
+            dst_path = os.path.join(new_camera_dir,'%04d.npy' % ann_id)
+            convert_dump(src_path, dst_path)
+#    src_path = '0000.npz'
+#    dst_path = 's100_k_0.npy'
+#    convert_dump(src_path, dst_path)
 
     # ####################################################################
     # graspnet_root = '/home/gmh/graspnet' # ROOT PATH FOR GRASPNET
