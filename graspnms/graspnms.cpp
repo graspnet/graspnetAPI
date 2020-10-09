@@ -1,3 +1,5 @@
+// Code Written by Minghao Gou
+
 #include "graspnms.h"
 #define SCORE_PLACE 0
 #define TRANSLATION_START_PLACE 13

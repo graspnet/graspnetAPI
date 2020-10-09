@@ -105,15 +105,16 @@ class GraspGroup():
         '''
         **Input:**
 
-        - args can be (1) nothing (2) list of Grasp instances.
+        - args can be (1) nothing (2) numpy array of grasp group array.
         '''
         if len(args) == 0:
             self.grasp_group_array = np.zeros((0, GRASP_ARRAY_LEN), dtype=np.float32)
         elif len(args) == 1:
-            grasp_list = args
-            self.grasp_group_array = np.zeros((0, GRASP_ARRAY_LEN), dtype=np.float32)
-            for grasp in grasp_list:
-                self.grasp_group_array = np.concatenate((self.grasp_group_array, grasp.grasp_array.reshape((-1, GRASP_ARRAY_LEN))))
+            # grasp_list = args
+            self.grasp_group_array = args[0]
+            # self.grasp_group_array = np.zeros((0, GRASP_ARRAY_LEN), dtype=np.float32)
+            # for grasp in grasp_list:
+            #     self.grasp_group_array = np.concatenate((self.grasp_group_array, grasp.grasp_array.reshape((-1, GRASP_ARRAY_LEN))))
         else:
             raise ValueError('args must be nothing or list of Grasp instances.')
 
@@ -329,6 +330,10 @@ class GraspGroup():
         rect_grasp_group.rect_grasp_group_array = rect_grasp_group_array
         return rect_grasp_group
 
+    def nms(self, translation_thresh = 0.1, rotation_thresh = 30.0 / 180.0 * np.pi):
+        from grasp_nms import nms_grasp
+        return GraspGroup(nms_grasp(self.grasp_group_array, translation_thresh, rotation_thresh))
+
 class RectGrasp():
     def __init__(self, *args):
         '''
@@ -470,15 +475,16 @@ class RectGraspGroup():
         '''
         **Input:**
 
-        - args can be (1) nothing (2) list of RectGrasp instances.
+        - args can be (1) nothing (2) numpy array of rect_grasp_group_array.
         '''
         if len(args) == 0:
             self.rect_grasp_group_array = np.zeros((0, RECT_GRASP_ARRAY_LEN), dtype=np.float32)
         elif len(args) == 1:
-            rect_grasp_list = args
-            self.rect_grasp_group_array = np.zeros((0, RECT_GRASP_ARRAY_LEN), dtype=np.float32)
-            for rect_grasp in rect_grasp_list:
-                self.rect_grasp_group_array = np.concatenate((self.rect_grasp_group_array, rect_grasp.reshape((-1, RECT_GRASP_ARRAY_LEN))))
+            self.rect_grasp_group_array = args[0]
+            # rect_grasp_list = args
+            # self.rect_grasp_group_array = np.zeros((0, RECT_GRASP_ARRAY_LEN), dtype=np.float32)
+            # for rect_grasp in rect_grasp_list:
+            #     self.rect_grasp_group_array = np.concatenate((self.rect_grasp_group_array, rect_grasp.reshape((-1, RECT_GRASP_ARRAY_LEN))))
         else:
             raise ValueError('args must be nothing or list of RectGrasp instances.')
 

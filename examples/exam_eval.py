@@ -7,7 +7,7 @@ import numpy as np
 from graspnetAPI import GraspNetEval
 
 ####################################################################
-graspnet_root = '/DATA2/Benchmark/graspnet' # ROOT PATH FOR GRASPNET
+graspnet_root = '/home/gmh/graspnet' # ROOT PATH FOR GRASPNET
 dump_folder = 'dump_full'
 ####################################################################
 

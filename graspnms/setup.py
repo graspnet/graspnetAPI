@@ -1,3 +1,5 @@
+# // Code Written by Minghao Gou
+
 from distutils.core import setup
 
 from Cython.Build import cythonize

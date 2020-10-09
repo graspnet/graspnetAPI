@@ -1,3 +1,5 @@
+// Code Written by Minghao Gou
+
 #ifndef GRASPNMS_H
 #define GRASPNMS_H
 #include<iostream>

@@ -1,3 +1,5 @@
+// Code Written by Minghao Gou
+
 #include "geo.h"
 #include <cmath>
 #include <cstring>
