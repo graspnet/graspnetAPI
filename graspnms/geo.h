@@ -24,6 +24,7 @@ public:
     double& e(int,int);
 };
 
+Mat3x3 rotation_array_to_matrix(double *);
 Mat3x3 viewpoint_params_to_matrix(double,double,double,double);
 vector<double> get_vector_3(double,double,double);
 double norm(vector<double>);

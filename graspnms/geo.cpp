@@ -1,6 +1,6 @@
 #include "geo.h"
 #include <cmath>
-
+#include <cstring>
 using namespace std;
 
 ostream& operator<<(ostream& out,Mat3x3 m)
@@ -108,6 +108,13 @@ vector<double> get_vector_3(double d1,double d2,double d3)
     v.push_back(d2);
     v.push_back(d3);
     return v;
+}
+
+Mat3x3 rotation_array_to_matrix(double *rotation_start)
+{
+    Mat3x3 rotation_matrix;
+    memcpy(&(rotation_matrix.data[0][0]), rotation_start, sizeof(double) * 9);
+    return rotation_matrix;
 }
 
 Mat3x3 viewpoint_params_to_matrix(double appx,double appy,double appz,double angle)
