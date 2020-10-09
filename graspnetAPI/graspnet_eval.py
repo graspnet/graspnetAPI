@@ -69,7 +69,7 @@ class GraspNetEval(GraspNet):
         config = get_config()
         table = create_table_points(1.0, 0.05, 1.0, dx=-0.5, dy=-0.5, dz=0, grid_size=0.008)
         TOP_K = 50
-        list_coe_of_friction = [0.2,0.4,0.6,0.8,1.0,1.2]
+        list_coe_of_friction = [0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0]
 
         # for scene_id in range(115,116):
         tic = time.time()
@@ -118,12 +118,12 @@ class GraspNetEval(GraspNet):
                     else:
                         grasp_accuracy[k,fric_idx] = np.sum(((score_list[0:k+1]<=fric) & (score_list[0:k+1]>0)).astype(int))/(k+1)
 
-            print('Mean Accuracy for grasps under friction_coef 0.2', np.mean(grasp_accuracy[:,0]))
-            print('Mean Accuracy for grasps under friction_coef 0.4', np.mean(grasp_accuracy[:,1]))
-            print('Mean Accuracy for grasps under friction_coef 0.6', np.mean(grasp_accuracy[:,2]))
-            print('Mean Accuracy for grasps under friction_coef 0.8',np.mean(grasp_accuracy[:,3]))
-            print('Mean Accuracy for grasps under friction_coef 1.0', np.mean(grasp_accuracy[:,4]))
-            print('Mean Accuracy for grasps under friction_coef 1.2',np.mean(grasp_accuracy[:,5]))
+            print('Mean Accuracy for grasps under friction_coef {}'.format(list_coe_of_friction[0]), np.mean(grasp_accuracy[:,0])) # 0.1
+            print('Mean Accuracy for grasps under friction_coef {}'.format(list_coe_of_friction[1]), np.mean(grasp_accuracy[:,1])) # 0.2
+            print('Mean Accuracy for grasps under friction_coef {}'.format(list_coe_of_friction[2]), np.mean(grasp_accuracy[:,2])) # 0.3
+            print('Mean Accuracy for grasps under friction_coef {}'.format(list_coe_of_friction[4]), np.mean(grasp_accuracy[:,4])) # 0.5
+            print('Mean Accuracy for grasps under friction_coef {}'.format(list_coe_of_friction[6]), np.mean(grasp_accuracy[:,6])) # 0.7
+            print('Mean Accuracy for grasps under friction_coef {}'.format(list_coe_of_friction[8]), np.mean(grasp_accuracy[:,8])) # 0.9
             print('Mean Accuracy for',np.mean(grasp_accuracy[:,:]))
             scene_accuracy.append(grasp_accuracy)
         return scene_accuracy
