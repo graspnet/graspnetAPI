@@ -274,7 +274,7 @@ def eval_grasp(grasp_group, models, dexnet_models, poses, config, table=None, vo
     num_models = len(models)
     ## grasp nms
     tic = time.time()
-    grasp_group = np.array(nms_grasp(grasp_group, 0.1, 30.0/180*np.pi))
+    grasp_group = grasp_group.nms(0.1, 30.0/180*np.pi)
     # print(len(grasp_group))
     toc = time.time()
     # print('nms time: %f' % (toc-tic))
