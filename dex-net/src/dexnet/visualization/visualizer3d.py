@@ -34,7 +34,8 @@ try:
     import mayavi.mlab as mv
     import mayavi.mlab as mlab
 except:
-    logging.info('Failed to import mayavi')
+    # logging.info('Failed to import mayavi')
+    pass
 import matplotlib.pyplot as plt
 import matplotlib.tri as mtri
 import scipy.spatial.distance as ssd

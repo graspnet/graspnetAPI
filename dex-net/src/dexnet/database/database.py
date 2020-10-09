@@ -55,7 +55,8 @@ import IPython
 try:
     import dill
 except ImportError:
-    logging.warning("Could not import dill, some metadata operations will be unavailable")
+    pass
+    # logging.warning("Could not import dill, some metadata operations will be unavailable")
 
 INDEX_FILE = 'index.db'
 

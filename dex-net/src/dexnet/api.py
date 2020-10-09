@@ -31,7 +31,7 @@ import time
 
 # create logger
 logger = logging.getLogger(__name__)
-logger.setLevel(logging.INFO)
+logger.setLevel(logging.ERROR)
 
 from autolab_core import YamlConfig, RigidTransform
 
@@ -50,7 +50,8 @@ from meshpy import convex_decomposition, Mesh3D
 try:
     from dexnet.visualization.visualizer3d import DexNetVisualizer3D as vis
 except:
-    logger.warning('Failed to import DexNetVisualizer3D, visualization methods will be unavailable')
+    # logger.warning('Failed to import DexNetVisualizer3D, visualization methods will be unavailable')
+    pass
 
 DEXNET_DIR = os.path.realpath(os.path.dirname(os.path.realpath(__file__)) + '/../../') + '/'
 # test add by liang
