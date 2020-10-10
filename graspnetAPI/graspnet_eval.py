@@ -7,6 +7,7 @@ import time
 import open3d as o3d
 
 from .graspnet import GraspNet
+from .grasp import GraspGroup
 from .utils.config import get_config
 from .utils.eval_utils import get_scene_name, create_table_points, parse_posevector, load_dexnet_model, transform_points, compute_point_distance, compute_closest_points, voxel_sample_points, topk_grasps, get_grasp_score, collision_detection, eval_grasp
 from .utils.xmlhandler import xmlReader
@@ -61,7 +62,7 @@ class GraspNetEval(GraspNet):
             pose_list.append(mat)
         return obj_list, pose_list, camera_pose, align_mat
         
-    def eval_scene(self, scene_id, camera, grasp_group):
+    def eval_scene(self, scene_id, camera, dump_folder):
         model_dir = os.path.join(self.root, 'models')
         dexmodel_dir = os.path.join(self.root, 'models')
         scene_dir = os.path.join(self.root, 'scenes')
@@ -87,6 +88,7 @@ class GraspNetEval(GraspNet):
         for ann_id in range(256):
             print('scene id:{}, ann id:{}'.format(scene_id, ann_id))
             # grasps = np.array(np.load(os.path.join(dump_folder,get_scene_name(scene_id), camera, '%04d.npz' % (ann_id,)))['preds'][0])
+            grasp_group = GraspGroup().from_npy(os.path.join(dump_folder,get_scene_name(scene_id), camera, '%04d.npy' % (ann_id,)))
             obj_list, pose_list, camera_pose, align_mat = self.get_model_poses(scene_id, ann_id, camera=camera)
             table_trans = transform_points(table, np.linalg.inv(np.matmul(align_mat, camera_pose)))
 

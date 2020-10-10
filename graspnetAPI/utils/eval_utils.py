@@ -6,7 +6,6 @@ from transforms3d.euler import euler2mat, quat2mat
 
 from .rotation import batch_viewpoint_params_to_matrix, matrix_to_dexnet_params
 
-from grasp_nms import nms_grasp
 from dexnet.grasping.quality import PointGraspMetrics3D
 from dexnet.grasping import ParallelJawPtGrasp3D, GraspableObject3D, GraspQualityConfigFactory, Contact3D
 from meshpy.obj_file import ObjFile
@@ -319,7 +318,7 @@ def eval_grasp(grasp_group, models, dexnet_models, poses, config, table=None, vo
     # print('pre detection time: %f' % (toc-tic))
     tic = time.time()
     collision_mask_list, empty_list, dexgrasp_list = collision_detection(
-        grasp_list, model_trans_list, dexnet_models, poses, scene, outlier=0.05, return_grasps=True)
+        grasp_list, model_trans_list, dexnet_models, poses, scene, outlier=0.05, return_dexgrasps=True)
     toc = time.time()
     # print('collision detection time: %f' % (toc-tic))
     

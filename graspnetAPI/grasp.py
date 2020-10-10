@@ -223,6 +223,7 @@ class GraspGroup():
         - grasp: Grasp instance
         '''
         self.grasp_group_array = np.concatenate((self.grasp_group_array, grasp.grasp_array.reshape((-1, GRASP_ARRAY_LEN))))
+        return self
 
     def remove(self, index):
         '''
@@ -231,6 +232,7 @@ class GraspGroup():
         - index: list of the index of grasp
         '''
         self.grasp_group_array = np.delete(self.grasp_group_array, index, axis = 0)
+        return self
 
     def from_npy(self, npy_file_path):
         '''
@@ -239,6 +241,7 @@ class GraspGroup():
         - npy_file_path: string of the file path.
         '''
         self.grasp_group_array = np.load(npy_file_path)
+        return self
 
     def save_npy(self, npy_file_path):
         '''
@@ -275,6 +278,7 @@ class GraspGroup():
         if not reverse:
             index = index[::-1]
         self.grasp_group_array = self.grasp_group_array[index]
+        return self
 
     def random_sample(self, numGrasp = 20):
         '''
@@ -537,6 +541,7 @@ class RectGraspGroup():
         - rect_grasp: RectGrasp instance
         '''
         self.rect_grasp_group_array = np.concatenate((self.rect_grasp_group_array, rect_grasp.rect_grasp_array.reshape((-1, RECT_GRASP_ARRAY_LEN))))
+        return self
 
     def scores(self):
         '''
@@ -593,6 +598,7 @@ class RectGraspGroup():
         - npy_file_path: string of the file path.
         '''
         self.rect_grasp_group_array = np.load(npy_file_path)
+        return self
 
     def save_npy(self, npy_file_path):
         '''
@@ -711,6 +717,7 @@ class RectGraspGroup():
         if not reverse:
             index = index[::-1]
         self.rect_grasp_group_array = self.rect_grasp_group_array[index]
+        return self
 
     def random_sample(self, numGrasp = 20):
         '''

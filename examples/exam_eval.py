@@ -7,8 +7,10 @@ import numpy as np
 from graspnetAPI import GraspNetEval
 
 ####################################################################
-graspnet_root = '/home/gmh/graspnet' # ROOT PATH FOR GRASPNET
-dump_folder = 'dump_full'
+# graspnet_root = '/home/gmh/graspnet' # ROOT PATH FOR GRASPNET
+graspnet_root = '/DATA1/Benchmark/graspnet' # ROOT PATH FOR GRASPNET
+# dump_folder = '/home/minghao/hdd/dump_new'
+dump_folder = '/home/minghao/hdd/dump_new_pretrained'
 ####################################################################
 
 if __name__ == '__main__':
