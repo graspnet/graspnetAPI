@@ -69,10 +69,6 @@ class GraspNetEval(GraspNet):
         return obj_list, pose_list, camera_pose, align_mat
         
     def eval_scene(self, scene_id, camera, dump_folder):
-        model_dir = os.path.join(self.root, 'models')
-        dexmodel_dir = os.path.join(self.root, 'models')
-        scene_dir = os.path.join(self.root, 'scenes')
-
         config = get_config()
         table = create_table_points(1.0, 0.05, 1.0, dx=-0.5, dy=-0.5, dz=0, grid_size=0.008)
         TOP_K = 50
@@ -92,7 +88,7 @@ class GraspNetEval(GraspNet):
         # print('model voxel sample time: %f' % (toc-tic))
         scene_accuracy = []
         for ann_id in range(256):
-            print('scene id:{}, ann id:{}'.format(scene_id, ann_id))
+            # print('scene id:{}, ann id:{}'.format(scene_id, ann_id))
             # grasps = np.array(np.load(os.path.join(dump_folder,get_scene_name(scene_id), camera, '%04d.npz' % (ann_id,)))['preds'][0])
             grasp_group = GraspGroup().from_npy(os.path.join(dump_folder,get_scene_name(scene_id), camera, '%04d.npy' % (ann_id,)))
             obj_list, pose_list, camera_pose, align_mat = self.get_model_poses(scene_id, ann_id, camera=camera)
@@ -126,13 +122,13 @@ class GraspNetEval(GraspNet):
                     else:
                         grasp_accuracy[k,fric_idx] = np.sum(((score_list[0:k+1]<=fric) & (score_list[0:k+1]>0)).astype(int))/(k+1)
 
-            print('Mean Accuracy for grasps under friction_coef {}'.format(list_coe_of_friction[0]), np.mean(grasp_accuracy[:,0])) # 0.1
-            print('Mean Accuracy for grasps under friction_coef {}'.format(list_coe_of_friction[1]), np.mean(grasp_accuracy[:,1])) # 0.2
-            print('Mean Accuracy for grasps under friction_coef {}'.format(list_coe_of_friction[2]), np.mean(grasp_accuracy[:,2])) # 0.3
-            print('Mean Accuracy for grasps under friction_coef {}'.format(list_coe_of_friction[4]), np.mean(grasp_accuracy[:,4])) # 0.5
-            print('Mean Accuracy for grasps under friction_coef {}'.format(list_coe_of_friction[6]), np.mean(grasp_accuracy[:,6])) # 0.7
-            print('Mean Accuracy for grasps under friction_coef {}'.format(list_coe_of_friction[8]), np.mean(grasp_accuracy[:,8])) # 0.9
-            print('Mean Accuracy for',np.mean(grasp_accuracy[:,:]))
+            # print('Mean Accuracy for grasps under friction_coef {}'.format(list_coe_of_friction[0]), np.mean(grasp_accuracy[:,0])) # 0.1
+            # print('Mean Accuracy for grasps under friction_coef {}'.format(list_coe_of_friction[1]), np.mean(grasp_accuracy[:,1])) # 0.2
+            # print('Mean Accuracy for grasps under friction_coef {}'.format(list_coe_of_friction[2]), np.mean(grasp_accuracy[:,2])) # 0.3
+            # print('Mean Accuracy for grasps under friction_coef {}'.format(list_coe_of_friction[4]), np.mean(grasp_accuracy[:,4])) # 0.5
+            # print('Mean Accuracy for grasps under friction_coef {}'.format(list_coe_of_friction[6]), np.mean(grasp_accuracy[:,6])) # 0.7
+            # print('Mean Accuracy for grasps under friction_coef {}'.format(list_coe_of_friction[8]), np.mean(grasp_accuracy[:,8])) # 0.9
+            print('Mean Accuracy for scene {} ann {}'.format(scene_id, ann_id),np.mean(grasp_accuracy[:,:]))
             scene_accuracy.append(grasp_accuracy)
         return scene_accuracy
 
@@ -148,3 +144,11 @@ class GraspNetEval(GraspNet):
         for res in res_list:
             scene_acc_list.append(res.get())
         return scene_acc_list
+
+    def eval_all(self, dump_folder, proc = 2):
+        kn_res = np.array(self.parallel_eval_scenes(scene_ids = list(range(100, 190)), camera = 'kinect', dump_folder = dump_folder))
+        rs_res = np.array(self.parallel_eval_scenes(scene_ids = list(range(100, 190)), camera = 'realsense', dump_folder = dump_folder))
+        kn_ap = [np.mean(kn_res), np.mean(kn_res[0:30]), np.mean(kn_res[30:60]), np.mean(kn_res[60:90])]
+        rs_ap = [np.mean(rs_res), np.mean(rs_res[0:30]), np.mean(rs_res[30:60]), np.mean(rs_res[60:90])]
+        print('Evaluation Result:\n----------\nKinect, AP={}, AP Seen={}, AP Similar={}, AP Novel={}\n----------\RealSense, AP={}, AP Seen={}, AP Similar={}, AP Novel={}'.format(kn_ap[0], kn_ap[1], kn_ap[2], kn_ap[3], rs_ap[0], rs_ap[1], rs_ap[2], rs_ap[3]))
+        return kn_res, rs_res, kn_ap, rs_ap
