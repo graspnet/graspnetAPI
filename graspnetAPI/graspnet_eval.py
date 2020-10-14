@@ -4,6 +4,7 @@ __version__ = '1.0'
 import numpy as np
 import os
 import time
+import pickle
 import open3d as o3d
 
 from .graspnet import GraspNet
@@ -32,7 +33,12 @@ class GraspNetEval(GraspNet):
             obj_list.append(obj_idx)
         for obj_idx in obj_list:
             model = o3d.io.read_point_cloud(os.path.join(model_dir, '%03d' % obj_idx, 'nontextured.ply'))
-            dexmodel = load_dexnet_model(os.path.join(model_dir, '%03d' % obj_idx, 'textured'))
+            dex_cache_path = os.path.join(self.root, 'dex_models', '%03d.pkl' % obj_idx)
+            if os.path.exists(dex_cache_path):
+                with open(dex_cache_path, 'rb') as f:
+                    dexmodel = pickle.load(f)
+            else:
+                dexmodel = load_dexnet_model(os.path.join(model_dir, '%03d' % obj_idx, 'textured'))
             points = np.array(model.points)
             model_list.append(points)
             dexmodel_list.append(dexmodel)
