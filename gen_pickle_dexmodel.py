@@ -3,7 +3,7 @@ from tqdm import tqdm
 import pickle
 import os
 
-graspnet_root = '/home/gmh/graspnet'
+graspnet_root = '/home/minghao/graspnet'
 
 dex_folder = 'dex_models'
 if not os.path.exists(dex_folder):

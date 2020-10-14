@@ -128,7 +128,7 @@ class GraspNetEval(GraspNet):
             # print('Mean Accuracy for grasps under friction_coef {}'.format(list_coe_of_friction[4]), np.mean(grasp_accuracy[:,4])) # 0.5
             # print('Mean Accuracy for grasps under friction_coef {}'.format(list_coe_of_friction[6]), np.mean(grasp_accuracy[:,6])) # 0.7
             # print('Mean Accuracy for grasps under friction_coef {}'.format(list_coe_of_friction[8]), np.mean(grasp_accuracy[:,8])) # 0.9
-            print('Mean Accuracy for scene {} ann {}'.format(scene_id, ann_id),np.mean(grasp_accuracy[:,:]))
+            print('Mean Accuracy for scene:{} ann:{}='.format(scene_id, ann_id),np.mean(grasp_accuracy[:,:]))
             scene_accuracy.append(grasp_accuracy)
         return scene_accuracy
 
@@ -146,8 +146,8 @@ class GraspNetEval(GraspNet):
         return scene_acc_list
 
     def eval_all(self, dump_folder, proc = 2):
-        kn_res = np.array(self.parallel_eval_scenes(scene_ids = list(range(100, 190)), camera = 'kinect', dump_folder = dump_folder))
-        rs_res = np.array(self.parallel_eval_scenes(scene_ids = list(range(100, 190)), camera = 'realsense', dump_folder = dump_folder))
+        kn_res = np.array(self.parallel_eval_scenes(scene_ids = list(range(100, 190)), camera = 'kinect', dump_folder = dump_folder, proc = proc))
+        rs_res = np.array(self.parallel_eval_scenes(scene_ids = list(range(100, 190)), camera = 'realsense', dump_folder = dump_folder, proc = proc))
         kn_ap = [np.mean(kn_res), np.mean(kn_res[0:30]), np.mean(kn_res[30:60]), np.mean(kn_res[60:90])]
         rs_ap = [np.mean(rs_res), np.mean(rs_res[0:30]), np.mean(rs_res[30:60]), np.mean(rs_res[60:90])]
         print('Evaluation Result:\n----------\nKinect, AP={}, AP Seen={}, AP Similar={}, AP Novel={}\n----------\RealSense, AP={}, AP Seen={}, AP Similar={}, AP Novel={}'.format(kn_ap[0], kn_ap[1], kn_ap[2], kn_ap[3], rs_ap[0], rs_ap[1], rs_ap[2], rs_ap[3]))
