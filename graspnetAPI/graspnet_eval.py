@@ -135,3 +135,16 @@ class GraspNetEval(GraspNet):
             print('Mean Accuracy for',np.mean(grasp_accuracy[:,:]))
             scene_accuracy.append(grasp_accuracy)
         return scene_accuracy
+
+    def parallel_eval_scenes(self, scene_ids, camera, dump_folder, proc = 2):
+        from multiprocessing import Pool
+        p = Pool(processes = proc)
+        res_list = []
+        for scene_id in scene_ids:
+            res_list.append(p.apply_async(self.eval_scene, (scene_id, camera, dump_folder)))
+        p.close()
+        p.join()
+        scene_acc_list = []
+        for res in res_list:
+            scene_acc_list.append(res.get())
+        return scene_acc_list
