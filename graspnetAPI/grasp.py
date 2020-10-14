@@ -10,6 +10,7 @@ from .utils.utils import plot_gripper_pro_max, batch_rgbdxyz_2_rgbxy_depth, get_
 
 GRASP_ARRAY_LEN = 17
 RECT_GRASP_ARRAY_LEN = 7
+EPS = 1e-8
 
 class Grasp():
     def __init__(self, *args):
@@ -460,7 +461,7 @@ class RectGrasp():
         center, open_point, upper_point = self.get_key_points()
         depth_2d = depth_method(depths, center, open_point, upper_point) / 1000.0
         # print('depth 2d:{}'.format(depth_2d))
-        if abs(depth_2d) < 1e-5:
+        if abs(depth_2d) < EPS:
             return None
         center_xyz = np.array(framexy_depth_2_xyz(center[0], center[1], depth_2d, camera))
         open_point_xyz = np.array(framexy_depth_2_xyz(open_point[0], open_point[1], depth_2d, camera))
@@ -472,6 +473,9 @@ class RectGrasp():
         object_id = self.object_id()
         translation = center_xyz
         rotation = key_point_2_rotation(center_xyz, open_point_xyz, upper_point_xyz)
+        # to avoid bug some time
+        if height < EPS:
+            return None
         return Grasp(score, width, height, depth, rotation, translation, object_id)
 
 class RectGraspGroup():
@@ -678,7 +682,14 @@ class RectGraspGroup():
         # print(f'centers:{centers}\nopen points:{open_points}\nupper points:{upper_points}')
         depths_2d = depth_method(depths, centers, open_points, upper_points) / 1000.0
         # print(f'depths_3d:{depths_2d}')
-        valid_mask = np.abs(depths_2d) > 1e-5
+        valid_mask1 = np.abs(depths_2d) > EPS
+        valid_mask2 = np.linalg.norm(centers - open_points, axis =1) > EPS
+        valid_mask3 = np.linalg.norm(centers - upper_points, axis =1) > EPS
+        valid_mask4 = np.linalg.norm(upper_points - open_points, axis =1) > EPS
+        valid_mask = np.logical_and(
+            np.logical_and(valid_mask1, valid_mask2),
+            np.logical_and(valid_mask3, valid_mask4)
+        )
         # print(f'valid_mask:{valid_mask}')
         centers = centers[valid_mask]
         open_points = open_points[valid_mask]
