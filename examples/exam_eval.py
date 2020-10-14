@@ -16,12 +16,15 @@ dump_folder = '/home/minghao/ssd/multi_dump/new_grasp-0'
 if __name__ == '__main__':
     sceneId = 160
     camera = 'kinect'    
-    ge = GraspNetEval(root = graspnet_root, camera = camera, split = 'test')
+    ge_k = GraspNetEval(root = graspnet_root, camera = 'kinect', split = 'test')
+    ge_r = GraspNetEval(root = graspnet_root, camera = 'realsense', split = 'test')
     
     print('Evaluating scene:{}, camera:{}'.format(sceneId, camera))
-    acc = ge.eval_scene(scene_id = sceneId, camera = camera, dump_folder = dump_folder)
+    acc = ge_k.eval_scene(scene_id = sceneId, dump_folder = dump_folder)
     np_acc = np.array(acc)
     print('mean accuracy:{}'.format(np.mean(np_acc)))
 
-    print('Evaluating All')
-    ge.eval_all(dump_folder, proc = 24)
+    print('Evaluating kinect')
+    res, ap = ge_k.eval_all(dump_folder, proc = 24)
+    print('Evaluating realsense')
+    res, ap = ge_r.eval_all(dump_folder, proc = 24)

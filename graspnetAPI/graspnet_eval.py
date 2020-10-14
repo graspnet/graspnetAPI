@@ -14,16 +14,16 @@ from .utils.eval_utils import get_scene_name, create_table_points, parse_posevec
 from .utils.xmlhandler import xmlReader
 
 class GraspNetEval(GraspNet):
-    def __init__(self, root, camera, split):
+    def __init__(self, root, camera, split = 'test'):
         super(GraspNetEval, self).__init__(root, camera, split)
         
-    def get_scene_models(self, scene_id, ann_id, camera='realsense'):
+    def get_scene_models(self, scene_id, ann_id):
         '''
             return models in model coordinate
         '''
         model_dir = os.path.join(self.root, 'models')
         # print('Scene {}, {}'.format(scene_id, camera))
-        scene_reader = xmlReader(os.path.join(self.root, 'scenes', get_scene_name(scene_id), camera, 'annotations', '%04d.xml' % (ann_id,)))
+        scene_reader = xmlReader(os.path.join(self.root, 'scenes', get_scene_name(scene_id), self.camera, 'annotations', '%04d.xml' % (ann_id,)))
         posevectors = scene_reader.getposevectorlist()
         obj_list = []
         model_list = []
@@ -45,20 +45,20 @@ class GraspNetEval(GraspNet):
         return model_list, dexmodel_list, obj_list
 
 
-    def get_model_poses(self, scene_id, ann_id, camera='realsense'):
+    def get_model_poses(self, scene_id, ann_id):
         '''
             pose_list: object pose from model to camera coordinate
             camera_pose: from camera to world coordinate
             align_mat: from world to table-horizontal coordinate
         '''
         scene_dir = os.path.join(self.root, 'scenes')
-        camera_poses_path = os.path.join(self.root, 'scenes', get_scene_name(scene_id), camera, 'camera_poses.npy')
+        camera_poses_path = os.path.join(self.root, 'scenes', get_scene_name(scene_id), self.camera, 'camera_poses.npy')
         camera_poses = np.load(camera_poses_path)
         camera_pose = camera_poses[ann_id]
-        align_mat_path = os.path.join(self.root, 'scenes', get_scene_name(scene_id), camera, 'cam0_wrt_table.npy')
+        align_mat_path = os.path.join(self.root, 'scenes', get_scene_name(scene_id), self.camera, 'cam0_wrt_table.npy')
         align_mat = np.load(align_mat_path)
         # print('Scene {}, {}'.format(scene_id, camera))
-        scene_reader = xmlReader(os.path.join(scene_dir, get_scene_name(scene_id), camera, 'annotations', '%04d.xml'% (ann_id,)))
+        scene_reader = xmlReader(os.path.join(scene_dir, get_scene_name(scene_id), self.camera, 'annotations', '%04d.xml'% (ann_id,)))
         posevectors = scene_reader.getposevectorlist()
         obj_list = []
         pose_list = []
@@ -68,36 +68,34 @@ class GraspNetEval(GraspNet):
             pose_list.append(mat)
         return obj_list, pose_list, camera_pose, align_mat
         
-    def eval_scene(self, scene_id, camera, dump_folder):
+    def eval_scene(self, scene_id, dump_folder):
         config = get_config()
         table = create_table_points(1.0, 0.05, 1.0, dx=-0.5, dy=-0.5, dz=0, grid_size=0.008)
         TOP_K = 50
         list_coe_of_friction = [0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0]
 
         # for scene_id in range(115,116):
-        tic = time.time()
-        model_list, dexmodel_list, obj_list = self.get_scene_models(scene_id, ann_id=0, camera=camera)
-        toc = time.time()
+        model_list, dexmodel_list, _ = self.get_scene_models(scene_id, ann_id=0)
         # print('model loading time: %f' % (toc-tic))
         model_sampled_list = list()
-        tic = time.time()
+        # tic = time.time()
         for model in model_list:
             model_sampled = voxel_sample_points(model, 0.008)
             model_sampled_list.append(model_sampled)
-        toc = time.time()
+        # toc = time.time()
         # print('model voxel sample time: %f' % (toc-tic))
         scene_accuracy = []
         for ann_id in range(256):
             # print('scene id:{}, ann id:{}'.format(scene_id, ann_id))
             # grasps = np.array(np.load(os.path.join(dump_folder,get_scene_name(scene_id), camera, '%04d.npz' % (ann_id,)))['preds'][0])
-            grasp_group = GraspGroup().from_npy(os.path.join(dump_folder,get_scene_name(scene_id), camera, '%04d.npy' % (ann_id,)))
-            obj_list, pose_list, camera_pose, align_mat = self.get_model_poses(scene_id, ann_id, camera=camera)
+            grasp_group = GraspGroup().from_npy(os.path.join(dump_folder,get_scene_name(scene_id), self.camera, '%04d.npy' % (ann_id,)))
+            _, pose_list, camera_pose, align_mat = self.get_model_poses(scene_id, ann_id)
             table_trans = transform_points(table, np.linalg.inv(np.matmul(align_mat, camera_pose)))
 
             # model level list
-            tic = time.time()
+            # tic = time.time()
             grasp_list, score_list, collision_mask_list = eval_grasp(grasp_group, model_sampled_list, dexmodel_list, pose_list, config, table=table_trans, voxel_size=0.008)
-            toc = time.time()
+            # toc = time.time()
 
             # concat into scene level
             # remove empty
@@ -128,16 +126,16 @@ class GraspNetEval(GraspNet):
             # print('Mean Accuracy for grasps under friction_coef {}'.format(list_coe_of_friction[4]), np.mean(grasp_accuracy[:,4])) # 0.5
             # print('Mean Accuracy for grasps under friction_coef {}'.format(list_coe_of_friction[6]), np.mean(grasp_accuracy[:,6])) # 0.7
             # print('Mean Accuracy for grasps under friction_coef {}'.format(list_coe_of_friction[8]), np.mean(grasp_accuracy[:,8])) # 0.9
-            print('Mean Accuracy for scene:{} ann:{}='.format(scene_id, ann_id),np.mean(grasp_accuracy[:,:]))
+            print('\rMean Accuracy for scene:{} ann:{}='.format(scene_id, ann_id),np.mean(grasp_accuracy[:,:]), end='')
             scene_accuracy.append(grasp_accuracy)
         return scene_accuracy
 
-    def parallel_eval_scenes(self, scene_ids, camera, dump_folder, proc = 2):
+    def parallel_eval_scenes(self, scene_ids, dump_folder, proc = 2):
         from multiprocessing import Pool
         p = Pool(processes = proc)
         res_list = []
         for scene_id in scene_ids:
-            res_list.append(p.apply_async(self.eval_scene, (scene_id, camera, dump_folder)))
+            res_list.append(p.apply_async(self.eval_scene, (scene_id, dump_folder)))
         p.close()
         p.join()
         scene_acc_list = []
@@ -146,9 +144,7 @@ class GraspNetEval(GraspNet):
         return scene_acc_list
 
     def eval_all(self, dump_folder, proc = 2):
-        kn_res = np.array(self.parallel_eval_scenes(scene_ids = list(range(100, 190)), camera = 'kinect', dump_folder = dump_folder, proc = proc))
-        rs_res = np.array(self.parallel_eval_scenes(scene_ids = list(range(100, 190)), camera = 'realsense', dump_folder = dump_folder, proc = proc))
-        kn_ap = [np.mean(kn_res), np.mean(kn_res[0:30]), np.mean(kn_res[30:60]), np.mean(kn_res[60:90])]
-        rs_ap = [np.mean(rs_res), np.mean(rs_res[0:30]), np.mean(rs_res[30:60]), np.mean(rs_res[60:90])]
-        print('Evaluation Result:\n----------\nKinect, AP={}, AP Seen={}, AP Similar={}, AP Novel={}\n----------\RealSense, AP={}, AP Seen={}, AP Similar={}, AP Novel={}'.format(kn_ap[0], kn_ap[1], kn_ap[2], kn_ap[3], rs_ap[0], rs_ap[1], rs_ap[2], rs_ap[3]))
-        return kn_res, rs_res, kn_ap, rs_ap
+        res = np.array(self.parallel_eval_scenes(scene_ids = list(range(100, 190)), dump_folder = dump_folder, proc = proc))
+        ap = [np.mean(res), np.mean(res[0:30]), np.mean(res[30:60]), np.mean(res[60:90])]
+        print('\nEvaluation Result:\n----------\n{}, AP={}, AP Seen={}, AP Similar={}, AP Novel={}'.format(self.camera, ap[0], ap[1], ap[2], ap[3]))
+        return res, ap
