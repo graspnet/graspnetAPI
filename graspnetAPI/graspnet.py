@@ -386,7 +386,46 @@ class GraspNet():
         - numpy array of the depth with dtype = np.uint16
         '''
         return cv2.imread(os.path.join(self.root, 'scenes', 'scene_%04d' % sceneId, camera, 'depth', '%04d.png' % annId), cv2.IMREAD_UNCHANGED)
-    
+ 
+    def loadMask(self, sceneId, camera, annId):
+        '''
+        **Input:**
+
+        - sceneId: int of the scene index.
+        
+        - camera: string of type of camera, 'realsense' or 'kinect'
+
+        - annId: int of the annotation index.
+
+        **Output:**
+
+        - numpy array of the mask with dtype = np.uint16
+        '''
+        return cv2.imread(os.path.join(self.root, 'scenes', 'scene_%04d' % sceneId, camera, 'label', '%04d.png' % annId), cv2.IMREAD_UNCHANGED)
+   
+    def loadWorkSpace(self, sceneId, camera, annId):
+        '''
+        **Input:**
+
+        - sceneId: int of the scene index.
+        
+        - camera: string of type of camera, 'realsense' or 'kinect'
+
+        - annId: int of the annotation index.
+
+        **Output:**
+
+        - numpy array of the workspace with dtype = np.int8
+        '''
+        mask = self.loadMask(sceneId, camera, annId)
+        maskx = np.any(mask, axis=0)
+        masky = np.any(mask, axis=1)
+        x1 = np.argmax(maskx)
+        y1 = np.argmax(masky)
+        x2 = len(maskx) - np.argmax(maskx[::-1])
+        y2 = len(masky) - np.argmax(masky[::-1]) 
+        return (x1, y1, x2, y2)
+
     def loadScenePointCloud(self, sceneId, camera, annId, align=False, format = 'open3d'):
         '''
         **Input:**

@@ -1,8 +1,8 @@
 #! /bin/bash
-pip install .
+python -m pip install .
 
 cd graspnms
-pip install .
+python -m pip install .
 
 cd ../meshpy
 python setup.py develop
