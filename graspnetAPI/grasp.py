@@ -23,7 +23,9 @@ class Grasp():
 
         - the length of the numpy array is 17.
         '''
-        if len(args) == 1:
+        if len(args) == 0:
+            self.grasp_array = np.array([0, 0.02, 0.02, 0.02, 1, 0, 0, 0, 1 ,0 , 0, 0, 1, 0, 0, 0, -1], dtype = np.float32)
+        elif len(args) == 1:
             if type(args[0]) == np.ndarray:
                 self.grasp_array = copy.deepcopy(args[0])
             else:
@@ -44,6 +46,14 @@ class Grasp():
         - float of the score.
         '''
         return float(self.grasp_array[0])
+
+    def set_score(self, score):
+        '''
+        **input:**
+
+        - float of the score.
+        '''
+        self.grasp_array[0] = score
 
     def width(self):
         '''
@@ -77,6 +87,19 @@ class Grasp():
         '''
         return self.grasp_array[4:13].reshape((3,3))
 
+    def set_rotation_matrix(self, *args):
+        '''
+        **Input:**
+
+        - len(args) == 1: tuple of matrix
+
+        - len(args) == 9: float of matrix
+        '''
+        if len(args) == 1:
+            self.grasp_array[4:13] = np.array(args[0],dtype = np.float32)
+        elif len(args) == 9:
+            self.grasp_array[4:13] = np.array(args,dtype = np.float32)
+
     def translation(self):
         '''
         **Output:**
@@ -84,6 +107,19 @@ class Grasp():
         - np.array of shape (3,) of the translation.
         '''
         return self.grasp_array[13:16]
+
+    def set_translation(self, *args):
+        '''
+        **Input:**
+
+        - len(args) == 1: tuple of x, y, z
+
+        - len(args) == 3: float of x, y, z
+        '''
+        if len(args) == 1:
+            self.grasp_array[13:16] = np.array(args[0],dtype = np.float32)
+        elif len(args) == 3:
+            self.grasp_array[13:16] = np.array(args,dtype = np.float32)
 
     def object_id(self):
         '''
@@ -268,7 +304,7 @@ class GraspGroup():
         '''
         **Input:**
 
-        - reverse: bool of order, if True, from high to low, if False, from low to high.
+        - reverse: bool of order, if False, from high to low, if True, from low to high.
 
         **Output:**
 
@@ -335,7 +371,7 @@ class GraspGroup():
         rect_grasp_group.rect_grasp_group_array = rect_grasp_group_array
         return rect_grasp_group
 
-    def nms(self, translation_thresh = 0.1, rotation_thresh = 30.0 / 180.0 * np.pi):
+    def nms(self, translation_thresh = 0.03, rotation_thresh = 30.0 / 180.0 * np.pi):
         from grasp_nms import nms_grasp
         return GraspGroup(nms_grasp(self.grasp_group_array, translation_thresh, rotation_thresh))
 
@@ -717,7 +753,7 @@ class RectGraspGroup():
         '''
         **Input:**
 
-        - reverse: bool of order, if True, from high to low, if False, from low to high.
+        - reverse: bool of order, if False, from high to low, if True, from low to high.
 
         **Output:**
 

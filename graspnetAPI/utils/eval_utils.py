@@ -325,7 +325,7 @@ def eval_grasp(grasp_group, models, dexnet_models, poses, config, table=None, vo
     ## evaluate grasps
     # score configurations
     force_closure_quality_config = dict()
-    fc_list = np.array([1.0, 0.9, 0.8, 0.7, 0.6, 0.5, 0.4, 0.3, 0.2, 0.1])
+    fc_list = np.array([1.2,1.1, 1.0, 0.9, 0.8, 0.7, 0.6, 0.5, 0.4, 0.3, 0.2, 0.1])
     for value_fc in fc_list:
         value_fc = round(value_fc, 2)
         config['metrics']['force_closure']['friction_coef'] = value_fc

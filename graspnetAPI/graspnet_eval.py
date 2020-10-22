@@ -72,7 +72,7 @@ class GraspNetEval(GraspNet):
         config = get_config()
         table = create_table_points(1.0, 0.05, 1.0, dx=-0.5, dy=-0.5, dz=0, grid_size=0.008)
         TOP_K = 50
-        list_coe_of_friction = [0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0]
+        list_coe_of_friction = [0.2,0.4,0.6,0.8,1.0,1.2]
 
         # for scene_id in range(115,116):
         model_list, dexmodel_list, _ = self.get_scene_models(scene_id, ann_id=0)
