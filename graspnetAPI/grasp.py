@@ -271,13 +271,18 @@ class GraspGroup():
         '''
         return self.grasp_group_array[:,16].astype(np.int32)
 
-    def add(self, grasp):
+    def add(self, element):
         '''
         **Input:**
 
-        - grasp: Grasp instance
+        - element: Grasp instance or GraspGroup instance.
         '''
-        self.grasp_group_array = np.concatenate((self.grasp_group_array, grasp.grasp_array.reshape((-1, GRASP_ARRAY_LEN))))
+        if isinstance(element, Grasp):
+            self.grasp_group_array = np.concatenate((self.grasp_group_array, element.grasp_array.reshape((-1, GRASP_ARRAY_LEN))))
+        elif isinstance(element, GraspGroup):
+            self.grasp_group_array = np.concatenate((self.grasp_group_array, element.grasp_group_array))
+        else:
+            raise TypeError('Unknown type:{}'.format(element))
         return self
 
     def remove(self, index):
