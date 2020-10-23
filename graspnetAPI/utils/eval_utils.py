@@ -179,8 +179,8 @@ def collision_detection(grasp_list, model_list, dexnet_models, poses, scene_poin
         # grasp_angles = grasps[:, 8]
         grasp_poses = grasps[:, 4:13].reshape([-1,3,3])
         grasp_depths = grasps[:, 3]
-        # grasp_widths = grasps[:, 1]
-        grasp_widths = np.ones(grasps.shape[0])*0.1
+        grasp_widths = grasps[:, 1]
+        # grasp_widths = np.ones(grasps.shape[0])*0.1
         # grasp_points = transform_points(grasp_points, obj_pose)
         # crop scene, remove outlier
         xmin, xmax = model[:,0].min(), model[:,0].max()
@@ -273,7 +273,8 @@ def eval_grasp(grasp_group, models, dexnet_models, poses, config, table=None, vo
     num_models = len(models)
     ## grasp nms
     tic = time.time()
-    grasp_group = grasp_group.nms(0.1, 30.0/180*np.pi)
+    grasp_group = grasp_group.nms(0.03, 30.0/180*np.pi)
+    print(f'## EVAL ##, Input grasps:{len(grasp_group)}')
     # print(len(grasp_group))
     toc = time.time()
     # print('nms time: %f' % (toc-tic))

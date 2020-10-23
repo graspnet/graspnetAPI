@@ -68,7 +68,7 @@ class GraspNetEval(GraspNet):
             pose_list.append(mat)
         return obj_list, pose_list, camera_pose, align_mat
         
-    def eval_scene(self, scene_id, dump_folder):
+    def eval_scene(self, scene_id, dump_folder, return_list = False,vis = False):
         config = get_config()
         table = create_table_points(1.0, 0.05, 1.0, dx=-0.5, dy=-0.5, dz=0, grid_size=0.008)
         TOP_K = 50
@@ -85,6 +85,10 @@ class GraspNetEval(GraspNet):
         # toc = time.time()
         # print('model voxel sample time: %f' % (toc-tic))
         scene_accuracy = []
+        grasp_list_list = []
+        score_list_list = []
+        collision_list_list = []
+
         for ann_id in range(256):
             # print('scene id:{}, ann id:{}'.format(scene_id, ann_id))
             # grasps = np.array(np.load(os.path.join(dump_folder,get_scene_name(scene_id), camera, '%04d.npz' % (ann_id,)))['preds'][0])
@@ -104,7 +108,23 @@ class GraspNetEval(GraspNet):
             collision_mask_list = [x for x in collision_mask_list if len(x)!=0]
 
             grasp_list, score_list, collision_mask_list = np.concatenate(grasp_list), np.concatenate(score_list), np.concatenate(collision_mask_list)
-            
+            print(f'grasp list:{grasp_list}, len = {len(grasp_list)}')
+            print(f'score list:{score_list}, len = {len(score_list)}')
+            print(f'collision mask list:{collision_mask_list}, len = {len(collision_mask_list)}')
+            if vis:
+                gg = GraspGroup(grasp_list)
+                scores = np.array(score_list)
+                scores = scores / 2 + 0.5 # -1 -> 0, 0 -> 0.5, 1 -> 1
+                scores[collision_mask_list] = 0.3
+                gg.set_scores(scores)
+                gg.set_widths(0.1 * np.ones((len(gg)), dtype = np.float32))
+                grasps_geometry = gg.to_open3d_geometry_list()
+                pcd = self.loadScenePointCloud(scene_id, self.camera, ann_id)
+                # draw_geometries
+                o3d.visualization.draw_geometries([pcd, *grasps_geometry])
+            grasp_list_list.append(grasp_list)
+            score_list_list.append(score_list)
+            collision_list_list.append(collision_mask_list)
             # sort in scene level
             grasp_confidence = grasp_list[:,1]
             indices = np.argsort(-grasp_confidence)
@@ -128,7 +148,10 @@ class GraspNetEval(GraspNet):
             # print('Mean Accuracy for grasps under friction_coef {}'.format(list_coe_of_friction[8]), np.mean(grasp_accuracy[:,8])) # 0.9
             print('\rMean Accuracy for scene:{} ann:{}='.format(scene_id, ann_id),np.mean(grasp_accuracy[:,:]), end='')
             scene_accuracy.append(grasp_accuracy)
-        return scene_accuracy
+        if not return_list:
+            return scene_accuracy
+        else:
+            return scene_accuracy, grasp_list_list, score_list_list, collision_list_list
 
     def parallel_eval_scenes(self, scene_ids, dump_folder, proc = 2):
         from multiprocessing import Pool

@@ -204,6 +204,15 @@ class GraspGroup():
         - numpy array of shape (-1, ) of the scores.
         '''
         return self.grasp_group_array[:,0]
+    
+    def set_scores(self, scores):
+        '''
+        **Input:**
+
+        - scores: numpy array of shape (-1, ) of the scores.
+        '''
+        assert scores.size == len(self)
+        self.grasp_group_array[:,0] = copy.deepcopy(scores)
 
     def widths(self):
         '''
@@ -212,7 +221,16 @@ class GraspGroup():
         - numpy array of shape (-1, ) of the widths.
         '''
         return self.grasp_group_array[:,1]
-    
+
+    def set_widths(self, widths):
+        '''
+        **Input:**
+
+        - widths: numpy array of shape (-1, ) of the widths.
+        '''
+        assert widths.size == len(self)
+        self.grasp_group_array[:,1] = copy.deepcopy(widths)
+
     def heights(self):
         '''
         **Output:**
