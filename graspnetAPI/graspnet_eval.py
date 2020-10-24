@@ -166,6 +166,12 @@ class GraspNetEval(GraspNet):
             scene_acc_list.append(res.get())
         return scene_acc_list
 
+    def eval_seen(self, dump_folder, proc = 2):
+        res = np.array(self.parallel_eval_scenes(scene_ids = list(range(100, 130)), dump_folder = dump_folder, proc = proc))
+        ap = np.mean(res)
+        print('\nEvaluation Result:\n----------\n{}, AP={}, AP Seen={}'.format(self.camera, ap, ap))
+        return res, ap
+
     def eval_all(self, dump_folder, proc = 2):
         res = np.array(self.parallel_eval_scenes(scene_ids = list(range(100, 190)), dump_folder = dump_folder, proc = proc))
         ap = [np.mean(res), np.mean(res[0:30]), np.mean(res[30:60]), np.mean(res[60:90])]
