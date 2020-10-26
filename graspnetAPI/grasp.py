@@ -63,6 +63,14 @@ class Grasp():
         '''
         return float(self.grasp_array[1])
     
+    def set_width(self, width):
+        '''
+        **input:**
+
+        - float of the width.
+        '''
+        self.grasp_array[1] = width
+
     def height(self):
         '''
         **Output:**
@@ -194,6 +202,8 @@ class GraspGroup():
             graspgroup = GraspGroup()
             graspgroup.grasp_group_array = copy.deepcopy(self.grasp_group_array[index])
             return graspgroup
+        elif type(index) == np.ndarray:
+            return GraspGroup(self.grasp_group_array[index])
         else:
             raise TypeError('unknown type "{}" for calling __getitem__ for GraspGroup'.format(type(index)))
 
@@ -262,6 +272,15 @@ class GraspGroup():
         - np.array of shape (-1, 3) of the translations.
         '''
         return self.grasp_group_array[:, 13:16]
+
+    def set_translations(self, translations):
+        '''
+        **Input:**
+
+        - translations: numpy array of shape (-1, 3) of the translations.
+        '''
+        assert translations.shape == (len(self), 3)
+        self.grasp_group_array[:,13:16] = copy.deepcopy(translations)
 
     def object_ids(self):
         '''
