@@ -108,9 +108,9 @@ class GraspNetEval(GraspNet):
             collision_mask_list = [x for x in collision_mask_list if len(x)!=0]
 
             grasp_list, score_list, collision_mask_list = np.concatenate(grasp_list), np.concatenate(score_list), np.concatenate(collision_mask_list)
-            print(f'grasp list:{grasp_list}, len = {len(grasp_list)}')
-            print(f'score list:{score_list}, len = {len(score_list)}')
-            print(f'collision mask list:{collision_mask_list}, len = {len(collision_mask_list)}')
+            # print(f'grasp list:{grasp_list}, len = {len(grasp_list)}')
+            # print(f'score list:{score_list}, len = {len(score_list)}')
+            # print(f'collision mask list:{collision_mask_list}, len = {len(collision_mask_list)}')
             if vis:
                 t = o3d.geometry.PointCloud()
                 t.points = o3d.utility.Vector3dVector(table_trans)
