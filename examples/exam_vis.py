@@ -14,7 +14,7 @@ from graspnetAPI import GraspNet
 g = GraspNet(graspnet_root, camera='kinect', split='train')
 
 # show object grasps
-g.showObjGrasp(objIds = 0, show=True)
+# g.showObjGrasp(objIds = 0, show=True)
 
 # show 6d poses
 g.show6DPose(sceneIds = 0, show = True)

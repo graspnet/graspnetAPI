@@ -12,7 +12,7 @@ from .grasp import GraspGroup
 from .utils.config import get_config
 from .utils.eval_utils import get_scene_name, create_table_points, parse_posevector, load_dexnet_model, transform_points, compute_point_distance, compute_closest_points, voxel_sample_points, topk_grasps, get_grasp_score, collision_detection, eval_grasp
 from .utils.xmlhandler import xmlReader
-
+from .utils.utils import generate_scene_model
 class GraspNetEval(GraspNet):
     def __init__(self, root, camera, split = 'test'):
         super(GraspNetEval, self).__init__(root, camera, split)
@@ -112,6 +112,7 @@ class GraspNetEval(GraspNet):
             print(f'score list:{score_list}, len = {len(score_list)}')
             print(f'collision mask list:{collision_mask_list}, len = {len(collision_mask_list)}')
             if vis:
+                model_list = generate_scene_model(self.root, 'scene_%04d' % scene_id , ann_id, return_poses=False, align=False, camera=self.camera)
                 gg = GraspGroup(grasp_list)
                 scores = np.array(score_list)
                 scores = scores / 2 + 0.5 # -1 -> 0, 0 -> 0.5, 1 -> 1
@@ -121,7 +122,23 @@ class GraspNetEval(GraspNet):
                 grasps_geometry = gg.to_open3d_geometry_list()
                 pcd = self.loadScenePointCloud(scene_id, self.camera, ann_id)
                 # draw_geometries
+                # vis1 = o3d.visualization.Visualizer()
+                # vis1.create_window(width = 1280, height = 720)
+                # vis1.add_geometry(pcd)
+                # for g in grasps_geometry:
+                #     vis1.add_geometry(g)
+                # vis2 = o3d.visualization.Visualizer()
+                
+                # vis2.add_geometry(pcd)
+                # for g in grasps_geometry:
+                #     vis2.add_geometry(g)
+                # for model in model_list:
+                #     vis2.add_geometry(model)
+                # vis2.create_window(width = 1280, height = 720)
+
                 o3d.visualization.draw_geometries([pcd, *grasps_geometry])
+                o3d.visualization.draw_geometries([pcd, *grasps_geometry, *model_list])
+                o3d.visualization.draw_geometries([*grasps_geometry, *model_list])
             grasp_list_list.append(grasp_list)
             score_list_list.append(score_list)
             collision_list_list.append(collision_mask_list)
