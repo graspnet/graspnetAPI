@@ -112,6 +112,8 @@ class GraspNetEval(GraspNet):
             # print(f'score list:{score_list}, len = {len(score_list)}')
             # print(f'collision mask list:{collision_mask_list}, len = {len(collision_mask_list)}')
             if vis:
+                t = o3d.geometry.PointCloud()
+                t.points = o3d.utility.Vector3dVector(table_trans)
                 model_list = generate_scene_model(self.root, 'scene_%04d' % scene_id , ann_id, return_poses=False, align=False, camera=self.camera)
                 gg = GraspGroup(grasp_list)
                 scores = np.array(score_list)
@@ -138,7 +140,7 @@ class GraspNetEval(GraspNet):
 
                 o3d.visualization.draw_geometries([pcd, *grasps_geometry])
                 o3d.visualization.draw_geometries([pcd, *grasps_geometry, *model_list])
-                o3d.visualization.draw_geometries([*grasps_geometry, *model_list])
+                o3d.visualization.draw_geometries([*grasps_geometry, *model_list, t])
             grasp_list_list.append(grasp_list)
             score_list_list.append(score_list)
             collision_list_list.append(collision_mask_list)
