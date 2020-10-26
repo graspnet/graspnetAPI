@@ -70,7 +70,7 @@ class GraspNetEval(GraspNet):
         
     def eval_scene(self, scene_id, dump_folder, return_list = False,vis = False):
         config = get_config()
-        table = create_table_points(1.0, 0.05, 1.0, dx=-0.5, dy=-0.5, dz=0, grid_size=0.008)
+        table = create_table_points(1.0, 1.0, 0.05, dx=-0.5, dy=-0.5, dz=0.05, grid_size=0.008)
         TOP_K = 50
         list_coe_of_friction = [0.2,0.4,0.6,0.8,1.0,1.2]
 
