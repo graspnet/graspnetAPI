@@ -143,7 +143,7 @@ class GraspNetEval(GraspNet):
             score_list_list.append(score_list)
             collision_list_list.append(collision_mask_list)
             # sort in scene level
-            grasp_confidence = grasp_list[:,1]
+            grasp_confidence = grasp_list[:,0]
             indices = np.argsort(-grasp_confidence)
             grasp_list, score_list, collision_mask_list = grasp_list[indices], score_list[indices], collision_mask_list[indices]
 
