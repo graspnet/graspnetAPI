@@ -70,7 +70,7 @@ class GraspNetEval(GraspNet):
         
     def eval_scene(self, scene_id, dump_folder, return_list = False,vis = False):
         config = get_config()
-        table = create_table_points(1.0, 1.0, 0.05, dx=-0.5, dy=-0.5, dz=0.05, grid_size=0.008)
+        table = create_table_points(1.0, 1.0, 0.05, dx=-0.5, dy=-0.5, dz=-0.05, grid_size=0.008)
         TOP_K = 50
         list_coe_of_friction = [0.2,0.4,0.6,0.8,1.0,1.2]
 
@@ -108,9 +108,9 @@ class GraspNetEval(GraspNet):
             collision_mask_list = [x for x in collision_mask_list if len(x)!=0]
 
             grasp_list, score_list, collision_mask_list = np.concatenate(grasp_list), np.concatenate(score_list), np.concatenate(collision_mask_list)
-            print(f'grasp list:{grasp_list}, len = {len(grasp_list)}')
-            print(f'score list:{score_list}, len = {len(score_list)}')
-            print(f'collision mask list:{collision_mask_list}, len = {len(collision_mask_list)}')
+            # print(f'grasp list:{grasp_list}, len = {len(grasp_list)}')
+            # print(f'score list:{score_list}, len = {len(score_list)}')
+            # print(f'collision mask list:{collision_mask_list}, len = {len(collision_mask_list)}')
             if vis:
                 model_list = generate_scene_model(self.root, 'scene_%04d' % scene_id , ann_id, return_poses=False, align=False, camera=self.camera)
                 gg = GraspGroup(grasp_list)
