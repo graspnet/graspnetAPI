@@ -50,4 +50,3 @@ if __name__ == '__main__':
     
     else:
         generate_scene_rectangle_grasp(sceneId, dump_folder, camera)
-

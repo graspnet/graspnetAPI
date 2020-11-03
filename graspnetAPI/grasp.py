@@ -67,7 +67,7 @@ class Grasp():
         return float(self.grasp_array[1])
     
     @width.setter
-    def set_width(self, width):
+    def width(self, width):
         '''
         **input:**
 
@@ -541,7 +541,7 @@ class RectGrasp():
             raise ValueError('only one or six arguments are accepted')
     
     def __repr__(self):
-        return 'Rectangle Grasp: score:{}, height:{}, open point:{}, center point:{}, object id:{}'.format(self.score(), self.height(), self.open_point(), self.center_point(), self.object_id())
+        return 'Rectangle Grasp: score:{}, height:{}, open point:{}, center point:{}, object id:{}'.format(self.score, self.height, self.open_point, self.center_point, self.object_id)
 
     @property
     def score(self):

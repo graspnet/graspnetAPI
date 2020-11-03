@@ -10,15 +10,17 @@ Welcome to graspnetAPI's documentation!
    :maxdepth: 2
    :caption: Contents:
 
+   about
    install
 
-Indices and tables
-==================
+Examples
+=========
 
-* :ref:`genindex`
-* :ref:`modindex`
-* :ref:`search`
+.. toctree::
+   :maxdepth: 1
+   :caption: Examples
 
+   example_generate_rectangle_labels
 
 
 Python API
@@ -30,3 +32,10 @@ Python API
 
    graspnetAPI
    graspnetAPI.utils
+
+Indices and tables
+==================
+
+* :ref:`genindex`
+* :ref:`modindex`
+* :ref:`search`

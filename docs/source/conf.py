@@ -18,7 +18,7 @@ sys.path.insert(0, os.path.abspath('../../graspnetAPI'))
 # -- Project information -----------------------------------------------------
 
 project = 'graspnetAPI'
-copyright = '2020, graspnet'
+copyright = '2020, MVIG, Shanghai Jiao Tong University'
 author = 'graspnet'
 
 # The full version, including alpha/beta/rc tags

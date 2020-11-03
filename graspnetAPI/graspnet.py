@@ -438,6 +438,8 @@ class GraspNet():
 
         - aligh: bool of whether align to the table frame.
 
+        - format: string of the returned type. 'open3d' or 'numpy'
+
         **Output:**
 
         - open3d.geometry.PointCloud instance of the scene point cloud.
@@ -542,7 +544,7 @@ class GraspNet():
 
         - fric_coef_thresh: float of the frcition coefficient threshold of the grasp. 
 
-        ** ATTENTION **
+        **ATTENTION**
 
         the LOWER the friction coefficient is, the better the grasp is.
 
