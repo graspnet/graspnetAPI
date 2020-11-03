@@ -1,3 +1,0 @@
-include MANIFEST.in
-include graspnetAPI/utils/camera_poses/*
-include graspnetAPI/utils/*.so
