@@ -1,6 +1,10 @@
 __author__ = 'mhgou'
 __version__ = '1.0'
 
+from graspnetAPI import GraspNet
+import open3d as o3d
+import cv2
+
 # GraspNetAPI example for loading grasp for a scene.
 # change the graspnet_root path
 
@@ -10,10 +14,6 @@ graspnet_root = '/home/gmh/graspnet' # ROOT PATH FOR GRASPNET
 
 sceneId = 1
 annId = 3
-
-from graspnetAPI import GraspNet
-import open3d as o3d
-import cv2
 
 # initialize a GraspNet instance  
 g = GraspNet(graspnet_root, camera='kinect', split='train')
