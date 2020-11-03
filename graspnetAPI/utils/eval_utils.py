@@ -12,9 +12,31 @@ from meshpy.obj_file import ObjFile
 from meshpy.sdf_file import SdfFile
 
 def get_scene_name(num):
+    '''
+    **Input:**
+
+    - num: int of the scene number.
+    
+    **Output:**
+
+    - string of the scene name.
+    '''
     return ('scene_%04d' % (num,))
 
 def create_table_points(lx, ly, lz, dx=0, dy=0, dz=0, grid_size=0.01):
+    '''
+    **Input:**
+
+    - lx:
+
+    - ly:
+
+    - lz:
+
+    **Output:**
+
+    - numpy array of the points with shape (-1, 3).
+    '''
     xmap = np.linspace(0, lx, int(lx/grid_size))
     ymap = np.linspace(0, ly, int(ly/grid_size))
     zmap = np.linspace(0, lz, int(lz/grid_size))
@@ -27,6 +49,17 @@ def create_table_points(lx, ly, lz, dx=0, dy=0, dz=0, grid_size=0.01):
     return points
 
 def parse_posevector(posevector):
+    '''
+    **Input:**
+
+    - posevector: list of pose
+
+    **Output:**
+
+    - obj_idx: int of the index of object.
+
+    - mat: numpy array of shape (4, 4) of the 6D pose of object.
+    '''
     mat = np.zeros([4,4],dtype=np.float32)
     alpha, beta, gamma = posevector[4:7]
     alpha = alpha / 180.0 * np.pi
@@ -40,10 +73,13 @@ def parse_posevector(posevector):
 
 def load_dexnet_model(data_path):
     '''
-    Input:
-        data_path: path to load .obj & .sdf files
-    Output:
-        obj: dexnet model
+    **Input:**
+        
+    - data_path: path to load .obj & .sdf files
+    
+    **Output:**
+
+    - obj: dexnet model
     '''
     of = ObjFile('{}.obj'.format(data_path))
     sf = SdfFile('{}.sdf'.format(data_path))
@@ -54,11 +90,15 @@ def load_dexnet_model(data_path):
 
 def transform_points(points, trans):
     '''
-    Input:
-        points: (N, 3)
-        trans: (4, 4)
-    Output:
-        points_trans: (N, 3)
+    **Input:**
+    
+    - points: (N, 3)
+    
+    - trans: (4, 4)
+    
+    **Output:**
+
+    - points_trans: (N, 3)
     '''
     ones = np.ones([points.shape[0],1], dtype=points.dtype)
     points_ = np.concatenate([points, ones], axis=-1)
@@ -68,11 +108,15 @@ def transform_points(points, trans):
 
 def compute_point_distance(A, B):
     '''
-    Input:
-        A: (N, 3)
-        B: (M, 3)
-    Output:
-        dists: (N, M)
+    **Input:**
+
+    - A: (N, 3)
+    
+    - B: (M, 3)
+    
+    **Output:**
+
+    - dists: (N, M)
     '''
     A = A[:, np.newaxis, :]
     B = B[np.newaxis, :, :]
@@ -81,11 +125,15 @@ def compute_point_distance(A, B):
 
 def compute_closest_points(A, B):
     '''
-    Input:
-        A: (N, 3)
-        B: (M, 3)
-    Output:
-        indices: (N,) closest point index in B for each point in A
+    **Input:**
+    
+    - A: (N, 3)
+        
+    - B: (M, 3)
+    
+    **Output:**
+    
+    - indices: (N,) closest point index in B for each point in A
     '''
     dists = compute_point_distance(A, B)
     indices = np.argmin(dists, axis=-1)
@@ -93,10 +141,13 @@ def compute_closest_points(A, B):
 
 def voxel_sample_points(points, voxel_size=0.008):
     '''
-    Input:
-        points: (N, 3)
-    Output:
-        points: (n, 3)
+    **Input:**
+    
+    - points: (N, 3)
+    
+    **Output:**
+    
+    - points: (n, 3)
     '''
     cloud = o3d.geometry.PointCloud()
     cloud.points = o3d.utility.Vector3dVector(points)
@@ -106,11 +157,15 @@ def voxel_sample_points(points, voxel_size=0.008):
 
 def topk_grasps(grasps, k=10):
     '''
-    Input:
-        grasps: (N, 17)
-        k: int
-    Output:
-        topk_grasps: (k, 17)
+    **Input:**
+    
+    - grasps: (N, 17)
+    
+    - k: int
+    
+    **Output:**
+    
+    - topk_grasps: (k, 17)
     '''
     assert(k > 0)
     grasp_confidence = grasps[:, 0]
@@ -141,17 +196,25 @@ def get_grasp_score(grasp, obj, fc_list, force_closure_quality_config):
 
 def collision_detection(grasp_list, model_list, dexnet_models, poses, scene_points, outlier=0.05, empty_thresh=10, return_dexgrasps=False):
     '''
-    Input:
-        grasp_list: [(k1,17), (k2,17), ..., (kn,17)] in camera coordinate
-        model_list: [(N1, 3), (N2, 3), ..., (Nn, 3)] in camera coordinate
-        dexnet_models: [GraspableObject3D,] in model coordinate
-        poses: [(4, 4),] from model coordinate to camera coordinate
-        scene_points: (Ns, 3) in camera coordinate
-        empty_thresh: int, 'num_inner_points < empty_thresh' means empty grasp
-    Output:
-        collsion_mask_list: [(k1,), (k2,), ..., (kn,)]
-        contact_list: [[[ParallelJawPtGrasp3D, Contact3D, Contact3D],],]
-            in model coordinate
+    **Input:**
+    
+    - grasp_list: [(k1,17), (k2,17), ..., (kn,17)] in camera coordinate
+    
+    - model_list: [(N1, 3), (N2, 3), ..., (Nn, 3)] in camera coordinate
+    
+    - dexnet_models: [GraspableObject3D,] in model coordinate
+    
+    - poses: [(4, 4),] from model coordinate to camera coordinate
+    
+    - scene_points: (Ns, 3) in camera coordinate
+    
+    - empty_thresh: int, 'num_inner_points < empty_thresh' means empty grasp
+    
+    **Output:**
+    
+    - collsion_mask_list: [(k1,), (k2,), ..., (kn,)]
+    
+    - contact_list: [[[ParallelJawPtGrasp3D, Contact3D, Contact3D],],]in model coordinate
     '''
     height = 0.02
     depth_base = 0.02
@@ -266,9 +329,13 @@ def collision_detection(grasp_list, model_list, dexnet_models, poses, scene_poin
 
 def eval_grasp(grasp_group, models, dexnet_models, poses, config, table=None, voxel_size=0.008):
     '''
-        models: in model coordinate
-        poses: from model to camera coordinate
-        table: in camera coordinate
+    **Input:**
+    
+    - models: in model coordinate
+    
+    - poses: from model to camera coordinate
+    
+    - table: in camera coordinate
     '''
     num_models = len(models)
     ## grasp nms

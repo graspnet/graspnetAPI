@@ -2,6 +2,19 @@ import numpy as np
 from math import pi
 
 def rotation_matrix(alpha, beta, gamma):
+    '''
+    **Input:**
+
+    - alpha: float of alpha angle.
+
+    - beta: float of beta angle.
+
+    - gamma: float of the gamma angle.
+
+    **Output:**
+
+    - numpy array of shape (3, 3) of rotation matrix.
+    '''
     Rx = np.array([[1, 0, 0],
                    [0, np.cos(alpha), -np.sin(alpha)],
                    [0, np.sin(alpha), np.cos(alpha)]])
@@ -15,6 +28,17 @@ def rotation_matrix(alpha, beta, gamma):
     return R
 
 def matrix_to_dexnet_params(matrix):
+    '''
+    **Input:**
+    
+    - numpy array of shape (3, 3) of the rotation matrix.
+
+    **Output:**
+
+    - binormal: numpy array of shape (3,).
+    
+    - angle: float of the angle.
+    '''
     approach = matrix[:, 0]
     binormal = matrix[:, 1]
     axis_y = binormal
@@ -33,6 +57,17 @@ def matrix_to_dexnet_params(matrix):
     return binormal, angle
 
 def viewpoint_params_to_matrix(towards, angle):
+    '''
+    **Input:**
+
+    - towards: numpy array towards vector with shape (3,).
+
+    - angle: float of in-plane rotation.
+
+    **Output:**
+
+    - numpy array of the rotation matrix with shape (3, 3).
+    '''
     axis_x = towards
     axis_y = np.array([-axis_x[1], axis_x[0], 0])
     if np.linalg.norm(axis_y) == 0:
@@ -48,6 +83,17 @@ def viewpoint_params_to_matrix(towards, angle):
     return matrix.astype(np.float32)
 
 def batch_viewpoint_params_to_matrix(batch_towards, batch_angle):
+    '''
+    **Input:**
+
+    - towards: numpy array towards vectors with shape (n, 3).
+
+    - angle: numpy array of in-plane rotations (n, ).
+
+    **Output:**
+
+    - numpy array of the rotation matrix with shape (n, 3, 3).
+    '''
     axis_x = batch_towards
     ones = np.ones(axis_x.shape[0], dtype=axis_x.dtype)
     zeros = np.zeros(axis_x.shape[0], dtype=axis_x.dtype)
@@ -66,6 +112,17 @@ def batch_viewpoint_params_to_matrix(batch_towards, batch_angle):
     return matrix.astype(np.float32)
 
 def dexnet_params_to_matrix(binormal, angle):
+    '''
+    **Input:**
+
+    - binormal: numpy array of shape (3,).
+    
+    - angle: float of the angle.
+
+    **Output:**
+
+    - numpy array of shape (3, 3) of the rotation matrix.
+    '''
     axis_y = binormal
     axis_x = np.array([axis_y[1], -axis_y[0], 0])
     if np.linalg.norm(axis_x) == 0:
