@@ -20,8 +20,9 @@ Examples
    :maxdepth: 1
    :caption: Examples
 
+   example_check_data
    example_generate_rectangle_labels
-
+   example_loadGrasp
 
 Python API
 ==========
