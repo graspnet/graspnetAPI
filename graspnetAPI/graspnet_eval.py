@@ -234,6 +234,44 @@ class GraspNetEval(GraspNet):
         print('\nEvaluation Result:\n----------\n{}, AP={}, AP Seen={}'.format(self.camera, ap, ap))
         return res, ap
 
+    def eval_similar(self, dump_folder, proc = 2):
+        '''
+        **Input:**
+
+        - dump_folder: string of the folder that saves the npy files.
+
+        - proc: int of the number of processes to use to evaluate.
+
+        **Output:**
+
+        - res: numpy array of the detailed accuracy.
+
+        - ap: float of the AP for similar split.
+        '''
+        res = np.array(self.parallel_eval_scenes(scene_ids = list(range(130, 160)), dump_folder = dump_folder, proc = proc))
+        ap = np.mean(res)
+        print('\nEvaluation Result:\n----------\n{}, AP={}, AP Similar={}'.format(self.camera, ap, ap))
+        return res, ap
+
+    def eval_novel(self, dump_folder, proc = 2):
+        '''
+        **Input:**
+
+        - dump_folder: string of the folder that saves the npy files.
+
+        - proc: int of the number of processes to use to evaluate.
+
+        **Output:**
+
+        - res: numpy array of the detailed accuracy.
+
+        - ap: float of the AP for novel split.
+        '''
+        res = np.array(self.parallel_eval_scenes(scene_ids = list(range(160, 190)), dump_folder = dump_folder, proc = proc))
+        ap = np.mean(res)
+        print('\nEvaluation Result:\n----------\n{}, AP={}, AP Novel={}'.format(self.camera, ap, ap))
+        return res, ap
+
     def eval_all(self, dump_folder, proc = 2):
         '''
         **Input:**
