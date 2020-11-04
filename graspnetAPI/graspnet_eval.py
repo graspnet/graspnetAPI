@@ -17,6 +17,7 @@ from .utils.utils import generate_scene_model
 class GraspNetEval(GraspNet):
     '''
     Class for evaluation on GraspNet dataset.
+    
     **Input:**
 
     - root: string of root path for the dataset.

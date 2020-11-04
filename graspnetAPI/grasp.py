@@ -972,7 +972,7 @@ class RectGraspGroup():
 
         - grasp_group: GraspGroup instance or None.
 
-        ## The number may not be the same to the input as some depth may be invalid. ##
+        .. note:: The number may not be the same to the input as some depth may be invalid.
         '''
         centers, open_points, upper_points = self.batch_get_key_points()
         # print(f'centers:{centers}\nopen points:{open_points}\nupper points:{upper_points}')
@@ -1006,7 +1006,7 @@ class RectGraspGroup():
         translations = centers_xyz
         rotations = batch_key_point_2_rotation(centers_xyz, open_points_xyz, upper_points_xyz).reshape((-1, 9))
         grasp_group = GraspGroup()
-        grasp_group.grasp_group_array = np.hstack((scores, widths, heights, depths, rotations, translations, object_ids))
+        grasp_group.grasp_group_array = copy.deepcopy(np.hstack((scores, widths, heights, depths, rotations, translations, object_ids))).astype(np.float64)
         return grasp_group
 
     def sort_by_score(self, reverse = False):
