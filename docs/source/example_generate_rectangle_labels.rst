@@ -8,7 +8,7 @@ You can generate the rectangle grasp labels by yourself.
 Import necessary libs:
 
 .. literalinclude:: ../../examples/exam_generate_rectangle_grasp.py
-    :lines: 1-11
+    :lines: 4-11
 
 Setup how many processes to use in generating the labels.
 

@@ -48,8 +48,8 @@ You can both download the file or generate it by yourself by running gen_pickle_
 
 .. _gen_pickle_dexmodel.py: https://github.com/graspnet/graspnetAPI/blob/master/gen_pickle_dexmodel.py
 
-Installation
-^^^^^^^^^^^^
+Install API
+^^^^^^^^^^^
 
 You need to install graspnetAPI from source::
 
