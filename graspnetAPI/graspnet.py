@@ -426,7 +426,7 @@ class GraspNet():
         y2 = len(masky) - np.argmax(masky[::-1]) 
         return (x1, y1, x2, y2)
 
-    def loadScenePointCloud(self, sceneId, camera, annId, align=False, format = 'open3d'):
+    def loadScenePointCloud(self, sceneId, camera, annId, align=False, format='open3d', use_workspace=False):
         '''
         **Input:**
 
@@ -437,6 +437,8 @@ class GraspNet():
         - annId: int of the annotation index.
 
         - aligh: bool of whether align to the table frame.
+
+	- use_workspace: bool of whether crop the point cloud in the work space.
 
         **Output:**
 
@@ -463,6 +465,13 @@ class GraspNet():
         points_z = depths / s
         points_x = (xmap - cx) / fx * points_z
         points_y = (ymap - cy) / fy * points_z
+
+        if use_workspace:
+            (x1, y1, x2, y2) = self.loadWorkSpace(sceneId, camera, annId)
+            points_z = points_z[y1:y2,x1:x2]
+            points_x = points_x[y1:y2,x1:x2]
+            points_y = points_y[y1:y2,x1:x2]
+            colors = colors[y1:y2,x1:x2]
 
         mask = (points_z > 0)
         points = np.stack([points_x, points_y, points_z], axis=-1)
