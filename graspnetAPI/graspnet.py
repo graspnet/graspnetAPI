@@ -22,11 +22,20 @@ __version__ = '1.0'
 
 # The following API functions are defined:
 #  GraspNet             - GraspNet api class that loads GraspNet annotation file and prepare data structures.
+#  checkDataCompleteness- Check the file completeness of the dataset.
 #  getSceneIds          - Get scene ids that satisfy given filter conditions.
 #  getObjIds            - Get obj ids that satisfy given filter conditions.
 #  getDataIds           - Get data ids that satisfy given filter conditions.
+#  loadBGR              - Load image in BGR format.
+#  loadRGB              - Load image in RGB format.
+#  loadDepth            - Load depth image.
+#  loadMask             - Load the segmentation masks.
+#  loadSceneModels      - Load object models in a scene.
+#  loadScenePointCloud  - Load point cloud constructed by the depth and color image.
+#  loadWorkSpace        - Load the workspace bounding box.
 #  loadGraspLabels      - Load grasp labels with the specified object ids.
 #  loadObjModels        - Load object 3d mesh model with the specified object ids.
+#  loadObjTrimesh       - Load object 3d mesh in Trimesh format.
 #  loadCollisionLabels  - Load collision labels with the specified scene ids.
 #  loadGrasp            - Load grasp labels with the specified scene and annotation id.
 #  loadData             - Load data path with the specified data ids.
@@ -61,15 +70,15 @@ def _isArrayLike(obj):
 class GraspNet():
     def __init__(self, root, camera='kinect', split='train'):
         '''
+
+        graspnetAPI main class.
+
         **input**:
 
-        - camera: string of type of camera: kinect or realsense
+        - camera: string of type of camera: "kinect" or "realsense"
 
         - split: string of type of split of dataset: "all", "train", "test", "test_seen", "test_similar" or "test_novel"
-
-        - sceneIDs: a list of scene ids of the dataset, split should be "user_define"
         '''
-
         assert camera in ['kinect', 'realsense'], 'camera should be kinect or realsense'
         assert split in ['all', 'train', 'test', 'test_seen', 'test_similar', 'test_novel'], 'split should be all/train/test/test_seen/test_similar/test_novel'
         self.root = root
@@ -118,7 +127,7 @@ class GraspNet():
     def __len__(self):
         return len(self.depthPath)
 
-    def check_data_completeness(self):
+    def checkDataCompleteness(self):
         '''
         Check whether the dataset files are complete.
 
@@ -306,7 +315,7 @@ class GraspNet():
 
         **Output:**
 
-        - a list of rimesh.Trimesh of the models
+        - a list of trimesh.Trimesh of the models
         '''
         objIds = self.objIds if objIds is None else objIds
         assert _isArrayLike(objIds) or isinstance(objIds, int), 'objIds must be an integer or a list/numpy array of integers'
@@ -415,7 +424,7 @@ class GraspNet():
 
         **Output:**
 
-        - numpy array of the workspace with dtype = np.int8
+        - tuple of the bounding box coordinates (x1, y1, x2, y2).
         '''
         mask = self.loadMask(sceneId, camera, annId)
         maskx = np.any(mask, axis=0)
@@ -438,7 +447,10 @@ class GraspNet():
 
         - aligh: bool of whether align to the table frame.
 
-	- use_workspace: bool of whether crop the point cloud in the work space.
+        - format: string of the returned type. 'open3d' or 'numpy'
+
+        - use_workspace: bool of whether crop the point cloud in the work space.
+
 
         **Output:**
 
@@ -551,15 +563,15 @@ class GraspNet():
 
         - fric_coef_thresh: float of the frcition coefficient threshold of the grasp. 
 
-        ** ATTENTION **
+        **ATTENTION**
 
         the LOWER the friction coefficient is, the better the grasp is.
 
         **Output:**
 
-        - a python dictionary. The key is the object id and the content is also a dict.
-        
-        The element of each dict gives the parameters of a grasp.
+        - If format == '6d', return a GraspGroup instance.
+
+        - If format == 'rect', return a RectGraspGroup instance.
         '''
         import numpy as np
         assert format == '6d' or format == 'rect', 'format must be "6d" or "rect"'
@@ -639,13 +651,8 @@ class GraspNet():
             rect_grasp_label = np.load(os.path.join(self.root,'scenes','scene_%04d' % sceneId,camera,'rect','%04d.npy' % annId))
             mask = rect_grasp_label[:,5] >= (1.1 - fric_coef_thresh)
             rect_grasp_label = rect_grasp_label[mask]
-            # num_grasp = len(rect_grasp_label)
             rect_grasp = RectGraspGroup()
             rect_grasp.rect_grasp_group_array = copy.deepcopy(rect_grasp_label)
-            # rect_grasp.rect_grasp_group_array = np.zeros((num_grasp, RECT_GRASP_ARRAY_LEN), dtype = np.float32)
-            # rect_grasp.rect_grasp_group_array[:,:6] = rect_grasp_label
-            # rect_grasp.rect_grasp_group_array[:,5] = 1.1 - rect_grasp.rect_grasp_group_array[:,5]
-            # rect_grasp.rect_grasp_group_array[:,6] = np.ones((num_grasp))
             return rect_grasp
 
     def loadData(self, ids=None, *extargs):
@@ -688,6 +695,23 @@ class GraspNet():
             return (rgbPath, depthPath, segLabelPath, metaPath, rectLabelPath, scene_name,annId)
 
     def showObjGrasp(self, objIds=[], numGrasp=10, th=0.5, saveFolder='save_fig', show=False):
+        '''
+        **Input:**
+
+        - objIds: int of list of objects ids.
+
+        - numGrasp: how many grasps to show in the image.
+
+        - th: threshold of the coefficient of friction.
+
+        - saveFolder: string of the path to save the rendered image.
+
+        - show: bool of whether to show the image.
+
+        **Output:**
+
+        - No output but save the rendered image and maybe show it.
+        '''
         from .utils.vis import visObjGrasp
         objIds = objIds if _isArrayLike(objIds) else [objIds]
         if len(objIds) == 0:
@@ -736,6 +760,19 @@ class GraspNet():
             cv2.destroyAllWindows()
 
     def show6DPose(self, sceneIds, saveFolder='save_fig', show=False):
+        '''
+        **Input:**
+
+        - sceneIds: int or list of scene ids. 
+
+        - saveFolder: string of the folder to store the image.
+
+        - show: bool of whether to show the image.
+
+        **Output:**
+        
+        - No output but to save the rendered image and maybe show the result.
+        '''
         from .utils.vis import vis6D
         sceneIds = sceneIds if _isArrayLike(sceneIds) else [sceneIds]
         if len(sceneIds) == 0:

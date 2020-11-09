@@ -27,22 +27,25 @@ class Pose:
 
     def get_id(self):
         """
-        Function:
-        return the id of this object
+        **Output:**
+        
+        - return the id of this object
         """
         return self.id
 
     def get_translation(self):
         """ 
-        Function:
-        Convert self.x, self.y, self.z into self.translation
+        **Output:**
+
+        - Convert self.x, self.y, self.z into self.translation
         """
         return np.array([self.x,self.y,self.z])
 
     def get_quat(self):
         """
-        Function:
-        Convert self.alpha, self.beta, self.gamma into self.quat
+        **Output:**
+        
+        - Convert self.alpha, self.beta, self.gamma into self.quat
         """
         euler = np.array([self.alpha, self.beta, self.gamma]) / 180.0 * np.pi
         quat = euler2quat(euler[0],euler[1],euler[2])
@@ -50,19 +53,22 @@ class Pose:
 
     def get_mat_4x4(self):
         """
-        Function:
-        Convert self.x, self.y, self.z, self.alpha, self.beta and self.gamma into mat_4x4 pose
+        **Output:**
+        
+        - Convert self.x, self.y, self.z, self.alpha, self.beta and self.gamma into mat_4x4 pose
         """
         mat_4x4 = trans3d.get_mat(self.x,self.y,self.z,self.alpha,self.beta,self.gamma)
         return mat_4x4
 
 def pose_from_pose_vector(pose_vector):
     """
-    Input:
-    pose_vector: A list in the format of [id,x,y,z,alpha,beta,gamma]
+    **Input:**
     
-    Output:
-    A pose class instance
+    - pose_vector: A list in the format of [id,x,y,z,alpha,beta,gamma]
+    
+    **Output:**
+    
+    - A pose class instance
     """
     return Pose(id = pose_vector[0],
     x = pose_vector[1],
@@ -74,11 +80,13 @@ def pose_from_pose_vector(pose_vector):
 
 def pose_list_from_pose_vector_list(pose_vector_list):
     """
-    Input:
-    Pose vector list defined in xmlhandler.py
+    **Input:**
 
-    Output:
-    A list of poses.
+    - Pose vector list defined in xmlhandler.py
+
+    **Output:**
+    
+    - list of poses.
     """
     pose_list = []
     for pose_vector in pose_vector_list:

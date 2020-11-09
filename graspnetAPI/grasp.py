@@ -24,7 +24,7 @@ class Grasp():
         - the length of the numpy array is 17.
         '''
         if len(args) == 0:
-            self.grasp_array = np.array([0, 0.02, 0.02, 0.02, 1, 0, 0, 0, 1 ,0 , 0, 0, 1, 0, 0, 0, -1], dtype = np.float32)
+            self.grasp_array = np.array([0, 0.02, 0.02, 0.02, 1, 0, 0, 0, 1 ,0 , 0, 0, 1, 0, 0, 0, -1], dtype = np.float64)
         elif len(args) == 1:
             if type(args[0]) == np.ndarray:
                 self.grasp_array = copy.deepcopy(args[0])
@@ -32,13 +32,14 @@ class Grasp():
                 raise TypeError('if only one arg is given, it must be np.ndarray.')
         elif len(args) == 7:
             score, width, height, depth, rotation_matrix, translation, object_id = args
-            self.grasp_array = np.concatenate([np.array((score, width, height, depth)),rotation_matrix.reshape(-1), translation, np.array((object_id)).reshape(-1)]).astype(np.float32)
+            self.grasp_array = np.concatenate([np.array((score, width, height, depth)),rotation_matrix.reshape(-1), translation, np.array((object_id)).reshape(-1)]).astype(np.float64)
         else:
             raise ValueError('only 1 or 7 arguments are accepted')
     
     def __repr__(self):
-        return 'Grasp: score:{}, width:{}, height:{}, depth:{}, translation:{}\nrotation:\n{}\nobject id:{}'.format(self.score(), self.width(), self.height(), self.depth(), self.translation(), self.rotation_matrix(), self.object_id())
+        return 'Grasp: score:{}, width:{}, height:{}, depth:{}, translation:{}\nrotation:\n{}\nobject id:{}'.format(self.score, self.width, self.height, self.depth, self.translation, self.rotation_matrix, self.object_id)
 
+    @property
     def score(self):
         '''
         **Output:**
@@ -47,7 +48,8 @@ class Grasp():
         '''
         return float(self.grasp_array[0])
 
-    def set_score(self, score):
+    @score.setter
+    def score(self, score):
         '''
         **input:**
 
@@ -55,6 +57,7 @@ class Grasp():
         '''
         self.grasp_array[0] = score
 
+    @property
     def width(self):
         '''
         **Output:**
@@ -63,7 +66,8 @@ class Grasp():
         '''
         return float(self.grasp_array[1])
     
-    def set_width(self, width):
+    @width.setter
+    def width(self, width):
         '''
         **input:**
 
@@ -71,6 +75,7 @@ class Grasp():
         '''
         self.grasp_array[1] = width
 
+    @property
     def height(self):
         '''
         **Output:**
@@ -79,6 +84,16 @@ class Grasp():
         '''
         return float(self.grasp_array[2])
 
+    @height.setter
+    def height(self, height):
+        '''
+        **input:**
+
+        - float of the height.
+        '''
+        self.grasp_array[2] = height
+    
+    @property
     def depth(self):
         '''
         **Output:**
@@ -87,6 +102,16 @@ class Grasp():
         '''
         return float(self.grasp_array[3])
 
+    @depth.setter
+    def depth(self, depth):
+        '''
+        **input:**
+
+        - float of the depth.
+        '''
+        self.grasp_array[3] = depth
+
+    @property
     def rotation_matrix(self):
         '''
         **Output:**
@@ -95,7 +120,8 @@ class Grasp():
         '''
         return self.grasp_array[4:13].reshape((3,3))
 
-    def set_rotation_matrix(self, *args):
+    @rotation_matrix.setter
+    def rotation_matrix(self, *args):
         '''
         **Input:**
 
@@ -104,10 +130,11 @@ class Grasp():
         - len(args) == 9: float of matrix
         '''
         if len(args) == 1:
-            self.grasp_array[4:13] = np.array(args[0],dtype = np.float32)
+            self.grasp_array[4:13] = np.array(args[0],dtype = np.float64)
         elif len(args) == 9:
-            self.grasp_array[4:13] = np.array(args,dtype = np.float32)
+            self.grasp_array[4:13] = np.array(args,dtype = np.float64)
 
+    @property
     def translation(self):
         '''
         **Output:**
@@ -116,7 +143,8 @@ class Grasp():
         '''
         return self.grasp_array[13:16]
 
-    def set_translation(self, *args):
+    @translation.setter
+    def translation(self, *args):
         '''
         **Input:**
 
@@ -125,10 +153,11 @@ class Grasp():
         - len(args) == 3: float of x, y, z
         '''
         if len(args) == 1:
-            self.grasp_array[13:16] = np.array(args[0],dtype = np.float32)
+            self.grasp_array[13:16] = np.array(args[0],dtype = np.float64)
         elif len(args) == 3:
-            self.grasp_array[13:16] = np.array(args,dtype = np.float32)
+            self.grasp_array[13:16] = np.array(args,dtype = np.float64)
 
+    @property
     def object_id(self):
         '''
         **Output:**
@@ -137,31 +166,41 @@ class Grasp():
         '''
         return int(self.grasp_array[16])
 
+    @object_id.setter
+    def object_id(self, object_id):
+        '''
+        **input:**
+
+        - int of the object_id.
+        '''
+        self.grasp_array[16] = object_id
+
     def to_open3d_geometry(self):
         '''
         **Ouput:**
 
         - list of open3d.geometry.Geometry of the gripper.
         '''
-        return plot_gripper_pro_max(self.translation(), self.rotation_matrix(), self.width(), self.depth(), score = self.score())
+        return plot_gripper_pro_max(self.translation, self.rotation_matrix, self.width, self.depth, score = self.score)
 
 class GraspGroup():
     def __init__(self, *args):
         '''
         **Input:**
 
-        - args can be (1) nothing (2) numpy array of grasp group array.
+        - args can be (1) nothing (2) numpy array of grasp group array (3) str of the npy file.
         '''
         if len(args) == 0:
-            self.grasp_group_array = np.zeros((0, GRASP_ARRAY_LEN), dtype=np.float32)
+            self.grasp_group_array = np.zeros((0, GRASP_ARRAY_LEN), dtype=np.float64)
         elif len(args) == 1:
-            # grasp_list = args
-            self.grasp_group_array = args[0]
-            # self.grasp_group_array = np.zeros((0, GRASP_ARRAY_LEN), dtype=np.float32)
-            # for grasp in grasp_list:
-            #     self.grasp_group_array = np.concatenate((self.grasp_group_array, grasp.grasp_array.reshape((-1, GRASP_ARRAY_LEN))))
+            if isinstance(args[0], np.ndarray):
+                self.grasp_group_array = args[0]
+            elif isinstance(args[0], str):
+                self.grasp_group_array = np.load(args[0])
+            else:
+                raise ValueError('args must be nothing, numpy array or string.')
         else:
-            raise ValueError('args must be nothing or list of Grasp instances.')
+            raise ValueError('args must be nothing, numpy array or string.')
 
     def __len__(self):
         '''
@@ -188,13 +227,13 @@ class GraspGroup():
         '''
         **Input:**
 
-        - index: int or slice.
+        - index: int, slice, list or np.ndarray.
 
         **Output:**
 
         - if index is int, return Grasp instance.
 
-        - if index is slice, return GraspGroup instance.
+        - if index is slice, np.ndarray or list, return GraspGroup instance.
         '''
         if type(index) == int:
             return Grasp(self.grasp_group_array[index])
@@ -204,9 +243,12 @@ class GraspGroup():
             return graspgroup
         elif type(index) == np.ndarray:
             return GraspGroup(self.grasp_group_array[index])
+        elif type(index) == list:
+            return GraspGroup(self.grasp_group_array[index])
         else:
             raise TypeError('unknown type "{}" for calling __getitem__ for GraspGroup'.format(type(index)))
 
+    @property
     def scores(self):
         '''
         **Output:**
@@ -215,7 +257,8 @@ class GraspGroup():
         '''
         return self.grasp_group_array[:,0]
     
-    def set_scores(self, scores):
+    @scores.setter
+    def scores(self, scores):
         '''
         **Input:**
 
@@ -224,6 +267,7 @@ class GraspGroup():
         assert scores.size == len(self)
         self.grasp_group_array[:,0] = copy.deepcopy(scores)
 
+    @property
     def widths(self):
         '''
         **Output:**
@@ -231,8 +275,9 @@ class GraspGroup():
         - numpy array of shape (-1, ) of the widths.
         '''
         return self.grasp_group_array[:,1]
-
-    def set_widths(self, widths):
+    
+    @widths.setter
+    def widths(self, widths):
         '''
         **Input:**
 
@@ -241,6 +286,7 @@ class GraspGroup():
         assert widths.size == len(self)
         self.grasp_group_array[:,1] = copy.deepcopy(widths)
 
+    @property
     def heights(self):
         '''
         **Output:**
@@ -249,6 +295,17 @@ class GraspGroup():
         '''
         return self.grasp_group_array[:,2]
 
+    @heights.setter
+    def heights(self, heights):
+        '''
+        **Input:**
+
+        - heights: numpy array of shape (-1, ) of the heights.
+        '''
+        assert heights.size == len(self)
+        self.grasp_group_array[:,2] = copy.deepcopy(heights)
+
+    @property
     def depths(self):
         '''
         **Output:**
@@ -257,6 +314,17 @@ class GraspGroup():
         '''
         return self.grasp_group_array[:,3]
 
+    @depths.setter
+    def depths(self, depths):
+        '''
+        **Input:**
+
+        - depths: numpy array of shape (-1, ) of the depths.
+        '''
+        assert depths.size == len(self)
+        self.grasp_group_array[:,3] = copy.deepcopy(depths)
+
+    @property
     def rotation_matrices(self):
         '''
         **Output:**
@@ -265,6 +333,17 @@ class GraspGroup():
         '''
         return self.grasp_group_array[:, 4:13].reshape((-1, 3, 3))
 
+    @rotation_matrices.setter
+    def rotation_matrices(self, rotation_matrices):
+        '''
+        **Input:**
+
+        - rotation_matrices: numpy array of shape (-1, 3, 3) of the rotation_matrices.
+        '''
+        assert rotation_matrices.shape == (len(self), 3, 3)
+        self.grasp_group_array[:,4:13] = copy.deepcopy(rotation_matrices.reshape((-1, 9)))       
+
+    @property
     def translations(self):
         '''
         **Output:**
@@ -273,7 +352,8 @@ class GraspGroup():
         '''
         return self.grasp_group_array[:, 13:16]
 
-    def set_translations(self, translations):
+    @translations.setter
+    def translations(self, translations):
         '''
         **Input:**
 
@@ -282,6 +362,7 @@ class GraspGroup():
         assert translations.shape == (len(self), 3)
         self.grasp_group_array[:,13:16] = copy.deepcopy(translations)
 
+    @property
     def object_ids(self):
         '''
         **Output:**
@@ -289,6 +370,16 @@ class GraspGroup():
         - numpy array of shape (-1, ) of the object ids.
         '''
         return self.grasp_group_array[:,16].astype(np.int32)
+
+    @object_ids.setter
+    def object_ids(self, object_ids):
+        '''
+        **Input:**
+
+        - object_ids: numpy array of shape (-1, ) of the object_ids.
+        '''
+        assert object_ids.size == len(self)
+        self.grasp_group_array[:,16] = copy.deepcopy(object_ids)
 
     def add(self, element):
         '''
@@ -387,12 +478,12 @@ class GraspGroup():
         
         - RectGraspGroup instance or None.
         '''
-        tranlations = self.translations()
-        rotations = self.rotation_matrices()
-        depths = self.depths()
-        scores = self.scores()
-        widths = self.widths()
-        object_ids = self.object_ids()
+        tranlations = self.translations
+        rotations = self.rotation_matrices
+        depths = self.depths
+        scores = self.scores
+        widths = self.widths
+        object_ids = self.object_ids
 
         mask = (rotations[:, 2, 0] > 0.99)
         tranlations = tranlations[mask]
@@ -414,6 +505,17 @@ class GraspGroup():
         return rect_grasp_group
 
     def nms(self, translation_thresh = 0.03, rotation_thresh = 30.0 / 180.0 * np.pi):
+        '''
+        **Input:**
+
+        - translation_thresh: float of the translation threshold.
+
+        - rotation_thresh: float of the rotation threshold.
+
+        **Output:**
+
+        - GraspGroup instance after nms.
+        '''
         from grasp_nms import nms_grasp
         return GraspGroup(nms_grasp(self.grasp_group_array, translation_thresh, rotation_thresh))
 
@@ -434,13 +536,14 @@ class RectGrasp():
             else:
                 raise TypeError('if only one arg is given, it must be np.ndarray.')
         elif len(args) == RECT_GRASP_ARRAY_LEN:
-            self.rect_grasp_array = np.array(args).astype(np.float32)
+            self.rect_grasp_array = np.array(args).astype(np.float64)
         else:
             raise ValueError('only one or six arguments are accepted')
     
     def __repr__(self):
-        return 'Rectangle Grasp: score:{}, height:{}, open point:{}, center point:{}, object id:{}'.format(self.score(), self.height(), self.open_point(), self.center_point(), self.object_id())
+        return 'Rectangle Grasp: score:{}, height:{}, open point:{}, center point:{}, object id:{}'.format(self.score, self.height, self.open_point, self.center_point, self.object_id)
 
+    @property
     def score(self):
         '''
         **Output:**
@@ -448,7 +551,17 @@ class RectGrasp():
         - float of the score.
         '''
         return self.rect_grasp_array[5]
+    
+    @score.setter
+    def score(self, score):
+        '''
+        **input:**
 
+        - float of the score.
+        '''
+        self.rect_grasp_array[5] = score
+
+    @property
     def height(self):
         '''
         **Output:**
@@ -456,7 +569,17 @@ class RectGrasp():
         - float of the height.
         '''
         return self.rect_grasp_array[4]
-    
+
+    @height.setter
+    def height(self, height):
+        '''
+        **input:**
+
+        - float of the height.
+        '''
+        self.rect_grasp_array[4] = height
+
+    @property
     def open_point(self):
         '''
         **Output:**
@@ -465,6 +588,21 @@ class RectGrasp():
         '''
         return (self.rect_grasp_array[2], self.rect_grasp_array[3])
 
+    @open_point.setter
+    def open_point(self, *args):
+        '''
+        **Input:**
+
+        - len(args) == 1: tuple of x, y
+
+        - len(args) == 2: float of x, y
+        '''
+        if len(args) == 1:
+            self.rect_grasp_array[2:4] = np.array(args[0],dtype = np.float64)
+        elif len(args) == 2:
+            self.rect_grasp_array[2:4] = np.array(args,dtype = np.float64)
+
+    @property
     def center_point(self):
         '''
         **Output:**
@@ -473,6 +611,21 @@ class RectGrasp():
         '''
         return (self.rect_grasp_array[0], self.rect_grasp_array[1])
 
+    @center_point.setter
+    def center_point(self, *args):
+        '''
+        **Input:**
+
+        - len(args) == 1: tuple of x, y
+
+        - len(args) == 2: float of x, y
+        '''
+        if len(args) == 1:
+            self.rect_grasp_array[0:2] = np.array(args[0],dtype = np.float64)
+        elif len(args) == 2:
+            self.rect_grasp_array[0:2] = np.array(args,dtype = np.float64)
+
+    @property
     def object_id(self):
         '''
         **Output:**
@@ -480,6 +633,15 @@ class RectGrasp():
         - int of the object id that this grasp grasps
         '''
         return int(self.rect_grasp_array[6])
+
+    @object_id.setter
+    def object_id(self, object_id):
+        '''
+        **input:**
+
+        - float of the object_id.
+        '''
+        self.rect_grasp_array[6] = object_id
 
     def to_opencv_image(self, opencv_rgb):
         '''
@@ -513,9 +675,9 @@ class RectGrasp():
 
         - center, open_point, upper_point, each of them is a numpy array of shape (2,)
         '''
-        open_point = np.array(self.open_point())
-        center = np.array(self.center_point())
-        height = self.height()
+        open_point = np.array(self.open_point)
+        center = np.array(self.center_point)
+        height = self.height
         open_point_vector = open_point - center
         unit_open_point_vector = open_point_vector / np.linalg.norm(open_point_vector)
         counter_clock_wise_rotation_matrix = np.array([[0,-1], [1, 0]])
@@ -547,8 +709,8 @@ class RectGrasp():
         depth = 0.02
         height = np.linalg.norm(upper_point_xyz - center_xyz) * 2
         width = np.linalg.norm(open_point_xyz - center_xyz) * 2 
-        score = self.score()
-        object_id = self.object_id()
+        score = self.score
+        object_id = self.object_id
         translation = center_xyz
         rotation = key_point_2_rotation(center_xyz, open_point_xyz, upper_point_xyz)
         # to avoid bug some time
@@ -561,18 +723,19 @@ class RectGraspGroup():
         '''
         **Input:**
 
-        - args can be (1) nothing (2) numpy array of rect_grasp_group_array.
+        - args can be (1) nothing (2) numpy array of rect_grasp_group_array (3) str of the numpy file.
         '''
         if len(args) == 0:
-            self.rect_grasp_group_array = np.zeros((0, RECT_GRASP_ARRAY_LEN), dtype=np.float32)
+            self.rect_grasp_group_array = np.zeros((0, RECT_GRASP_ARRAY_LEN), dtype=np.float64)
         elif len(args) == 1:
-            self.rect_grasp_group_array = args[0]
-            # rect_grasp_list = args
-            # self.rect_grasp_group_array = np.zeros((0, RECT_GRASP_ARRAY_LEN), dtype=np.float32)
-            # for rect_grasp in rect_grasp_list:
-            #     self.rect_grasp_group_array = np.concatenate((self.rect_grasp_group_array, rect_grasp.reshape((-1, RECT_GRASP_ARRAY_LEN))))
+            if isinstance(args[0], np.ndarray):
+                self.rect_grasp_group_array = args[0]
+            elif isinstance(args[0], str):
+                self.rect_grasp_group_array = np.load(args[0])
+            else:
+                raise ValueError('args must be nothing, numpy array or string.')
         else:
-            raise ValueError('args must be nothing or list of RectGrasp instances.')
+            raise ValueError('args must be nothing, numpy array or string.')
 
     def __len__(self):
         '''
@@ -599,17 +762,17 @@ class RectGraspGroup():
         '''
         **Input:**
 
-        - index: int or slice.
+        - index: int, slice, list or np.ndarray.
 
         **Output:**
 
-        - if index is int, return RectGrasp instance.
+        - if index is int, return Grasp instance.
 
-        - if index is slice, return RectGraspGroup instance.
+        - if index is slice, np.ndarray or list, return RectGraspGroup instance.
         '''
-        if type(index) == int:
+        if isinstance(index, int):
             return RectGrasp(self.rect_grasp_group_array[index])
-        elif type(index) == slice:
+        elif isinstance(index, slice) or isinstance(index, list) or isinstance(index, np.ndarray):
             rectgraspgroup = RectGraspGroup()
             rectgraspgroup.rect_grasp_group_array = copy.deepcopy(self.rect_grasp_group_array[index])
             return rectgraspgroup
@@ -625,6 +788,7 @@ class RectGraspGroup():
         self.rect_grasp_group_array = np.concatenate((self.rect_grasp_group_array, rect_grasp.rect_grasp_array.reshape((-1, RECT_GRASP_ARRAY_LEN))))
         return self
 
+    @property
     def scores(self):
         '''
         **Output:**
@@ -633,6 +797,17 @@ class RectGraspGroup():
         '''
         return self.rect_grasp_group_array[:, 5]
 
+    @scores.setter
+    def scores(self, scores):
+        '''
+        **Input:**
+
+        - scores: numpy array of shape (-1, ) of the scores.
+        '''
+        assert scores.size == len(self)
+        self.rect_grasp_group_array[:, 5] = copy.deepcopy(scores)
+
+    @property
     def heights(self):
         '''
         **Output:**
@@ -640,7 +815,18 @@ class RectGraspGroup():
         - numpy array of the heights.
         '''
         return self.rect_grasp_group_array[:, 4]
-    
+
+    @heights.setter
+    def heights(self, heights):
+        '''
+        **Input:**
+
+        - heights: numpy array of shape (-1, ) of the heights.
+        '''
+        assert heights.size == len(self)
+        self.rect_grasp_group_array[:, 4] = copy.deepcopy(heights)
+
+    @property
     def open_points(self):
         '''
         **Output:**
@@ -649,6 +835,17 @@ class RectGraspGroup():
         '''
         return self.rect_grasp_group_array[:, 2:4]
 
+    @open_points.setter
+    def open_points(self, open_points):
+        '''
+        **Input:**
+
+        - open_points: numpy array of shape (-1, 2) of the open_points.
+        '''
+        assert open_points.shape == (len(self), 2)
+        self.rect_grasp_group_array[:, 2:4] = copy.deepcopy(open_points)
+
+    @property
     def center_points(self):
         '''
         **Output:**
@@ -657,6 +854,17 @@ class RectGraspGroup():
         '''
         return self.rect_grasp_group_array[:, 0:2]
 
+    @center_points.setter
+    def center_points(self, center_points):
+        '''
+        **Input:**
+
+        - center_points: numpy array of shape (-1, 2) of the center_points.
+        '''
+        assert center_points.shape == (len(self), 2)
+        self.rect_grasp_group_array[:, 0:2] = copy.deepcopy(center_points)
+
+    @property
     def object_ids(self):
         '''
         **Output:**
@@ -664,6 +872,16 @@ class RectGraspGroup():
         - numpy array of the object ids that this grasp grasps.
         '''
         return np.round(self.rect_grasp_group_array[:, 6]).astype(np.int32)
+
+    @object_ids.setter
+    def object_ids(self, object_ids):
+        '''
+        **Input:**
+
+        - heiobject_idsghts: numpy array of shape (-1, ) of the object_ids.
+        '''
+        assert object_ids.size == len(self)
+        self.rect_grasp_group_array[:, 6] = copy.deepcopy(object_ids)
 
     def remove(self, index):
         '''
@@ -730,9 +948,9 @@ class RectGraspGroup():
 
         - center, open_point, upper_point, each of them is a numpy array of shape (2,)
         '''
-        open_points = self.open_points() # (-1, 2)
-        centers = self.center_points() # (-1, 2)
-        heights = self.heights().reshape((-1, 1)) # (-1, )
+        open_points = self.open_points # (-1, 2)
+        centers = self.center_points # (-1, 2)
+        heights = (self.heights).reshape((-1, 1)) # (-1, )
         open_point_vector = open_points - centers
         norm_open_point_vector = np.linalg.norm(open_point_vector, axis = 1).reshape(-1, 1)
         unit_open_point_vector = open_point_vector / np.hstack((norm_open_point_vector, norm_open_point_vector)) # (-1, 2)
@@ -754,7 +972,7 @@ class RectGraspGroup():
 
         - grasp_group: GraspGroup instance or None.
 
-        ## The number may not be the same to the input as some depth may be invalid. ##
+        .. note:: The number may not be the same to the input as some depth may be invalid.
         '''
         centers, open_points, upper_points = self.batch_get_key_points()
         # print(f'centers:{centers}\nopen points:{open_points}\nupper points:{upper_points}')
@@ -783,12 +1001,12 @@ class RectGraspGroup():
         depths = 0.02 * np.ones((valid_num, 1))
         heights = (np.linalg.norm(upper_points_xyz - centers_xyz, axis = 1) * 2).reshape((-1, 1))
         widths = (np.linalg.norm(open_points_xyz - centers_xyz, axis = 1) * 2).reshape((-1, 1))
-        scores = self.scores()[valid_mask].reshape((-1, 1))
-        object_ids = self.object_ids()[valid_mask].reshape((-1, 1))
+        scores = (self.scores)[valid_mask].reshape((-1, 1))
+        object_ids = (self.object_ids)[valid_mask].reshape((-1, 1))
         translations = centers_xyz
         rotations = batch_key_point_2_rotation(centers_xyz, open_points_xyz, upper_points_xyz).reshape((-1, 9))
         grasp_group = GraspGroup()
-        grasp_group.grasp_group_array = np.hstack((scores, widths, heights, depths, rotations, translations, object_ids))
+        grasp_group.grasp_group_array = copy.deepcopy(np.hstack((scores, widths, heights, depths, rotations, translations, object_ids))).astype(np.float64)
         return grasp_group
 
     def sort_by_score(self, reverse = False):

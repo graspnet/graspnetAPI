@@ -28,7 +28,7 @@ geometries.append(g.loadScenePointCloud(sceneId = sceneId, annId = annId, camera
 geometries += _6d_grasp.random_sample(numGrasp = 1000).to_open3d_geometry_list()
 o3d.visualization.draw_geometries(geometries)
 
-nms_grasp = _6d_grasp.nms()
+nms_grasp = _6d_grasp.nms(translation_thresh = 0.1, rotation_thresh = 30 / 180.0 * 3.1416)
 print('grasp after nms:\n{}'.format(nms_grasp))
 
 # visualize the grasps using open3d
