@@ -8,7 +8,16 @@ Visit the [GraspNet Website](http://graspnet.net) to get the dataset.
 
 ## Document
 
-Refer to [document](http://graspnet.net/docs/index.html) for more details.
+Refer to [document](http://graspnet.net/docs/index.html) for more details.(Not availabel now)
+
+You can also build the doc manually.
+```bash
+cd docs
+pip install -r requirements.txt
+bash build_doc.sh
+```
+
+LaTeX is required to build the pdf, but html can be built anyway.
 
 ## Install
 
