@@ -20,12 +20,4 @@ sphinx:
 # Optionally set the version of Python and requirements required to build your docs
 python:
   version: 3.6
-  install:
-    - requirements: docs/requirements.txt
-    - method: pip
-    path: .
-    extra_requirements:
-      - graspnms
-      - meshpy
-      - scikit-build
-      - dex-net
+  system_packages: true
