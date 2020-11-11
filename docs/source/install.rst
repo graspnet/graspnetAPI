@@ -50,8 +50,11 @@ You can both download the file or generate it by yourself by running gen_pickle_
 
 Install API
 ^^^^^^^^^^^
+You may install from PyPi::
+    
+    pip install graspnetAPI
 
-You need to install graspnetAPI from source::
+But we recommand installing from source::
 
     $ git clone https://github.com/graspnet/graspnetAPI.git
     $ cd graspnetAPI/

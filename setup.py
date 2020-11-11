@@ -5,16 +5,16 @@ import os
 
 class PostInstallCmd(install):
     def run(self):
-        os.system('pip install ./meshpy')
-        os.system('pip install ./dexnet')
-        os.system('cd graspnms\npip install .')
+        os.system('python -m pip install ./meshpy')
+        os.system('python -m pip install ./dexnet')
+        os.system('cd graspnms\npython -m pip install .')
         install.run(self)
 
-os.system('pip install cython numpy')
+os.system('python -m pip install cython numpy')
 
 setup(
     name='graspnetAPI',
-    version='1.0.0',
+    version='1.1.0',
     description='graspnet API',
     author='Hao-Shu Fang, Chenxi Wang, Minghao Gou',
     author_email='gouminghao@gmail.com',
