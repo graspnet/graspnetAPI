@@ -3,7 +3,7 @@ from setuptools import find_packages
 
 setup(
     name='graspnetAPI',
-    version='0.1',
+    version='1.0.0',
     description='graspnet API',
     author='Hao-Shu Fang, Chenxi Wang, Minghao Gou',
     author_email='fhaoshu@gmail.com',
