@@ -2,9 +2,6 @@ from distutils.core import setup
 from setuptools import find_packages
 import os
 
-os.system('pip install scikit-build')
-os.system('pip install cmake')
-
 setup(
     name='graspnetAPI',
     version='1.0.0',
