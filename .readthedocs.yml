@@ -22,8 +22,10 @@ python:
   version: 3.6
   install:
     - requirements: docs/requirements.txt
-  extra_requirements:
-    - graspnms
-    - meshpy
-    - scikit-build
-    - dex-net
+    - method: pip
+    path: .
+    extra_requirements:
+      - graspnms
+      - meshpy
+      - scikit-build
+      - dex-net
