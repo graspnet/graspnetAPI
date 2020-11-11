@@ -11,7 +11,7 @@ setup(
     packages=find_packages(),
     install_requires=[
         'numpy',
-        'skbuild',
+        'scikit-build',
         'cython',
         'scipy',
         'transforms3d==0.3.1',
