@@ -14,7 +14,7 @@ os.system('python -m pip install cython numpy')
 
 setup(
     name='graspnetAPI',
-    version='1.1.0',
+    version='1.1.1',
     description='graspnet API',
     author='Hao-Shu Fang, Chenxi Wang, Minghao Gou',
     author_email='gouminghao@gmail.com',
@@ -37,6 +37,10 @@ setup(
         'scikit-image',
         'autolab_core',
         'autolab-perception',
+        'cvxopt',
+        'dill',
+        'h5py',
+        'sklearn',
     ],
     cmdclass={
         'install': PostInstallCmd
