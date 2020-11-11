@@ -1,0 +1,9 @@
+include graspnms/grasp_nms.pyx
+include graspnms/grasp_nms.pxd
+include graspnms/graspnms.cpp
+include graspnms/graspnms.h
+include graspnms/geo.h
+include graspnms/geo.cpp
+include graspnms/setup.py
+recursive-include dexnet *
+recursive-include meshpy *

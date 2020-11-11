@@ -1,14 +1,24 @@
 from distutils.core import setup
 from setuptools import find_packages
+from setuptools.command.install import install
 import os
+
+class PostInstallCmd(install):
+    def run(self):
+        os.system('pip install ./meshpy')
+        os.system('pip install ./dexnet')
+        os.system('cd graspnms\npip install .')
+        install.run(self)
+
+os.system('pip install cython numpy')
 
 setup(
     name='graspnetAPI',
     version='1.0.0',
     description='graspnet API',
     author='Hao-Shu Fang, Chenxi Wang, Minghao Gou',
-    author_email='fhaoshu@gmail.com',
-    url='graspnet.net',
+    author_email='gouminghao@gmail.com',
+    url='https://graspnet.net',
     packages=find_packages(),
     install_requires=[
         'numpy',
@@ -26,6 +36,9 @@ setup(
         'trimesh',
         'scikit-image',
         'autolab_core',
-        'autolab-perception'
-    ]
+        'autolab-perception',
+    ],
+    cmdclass={
+        'install': PostInstallCmd
+    }
 )
