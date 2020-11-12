@@ -14,7 +14,7 @@ os.system('python -m pip install cython numpy')
 
 setup(
     name='graspnetAPI',
-    version='1.1.1',
+    version='1.1.2',
     description='graspnet API',
     author='Hao-Shu Fang, Chenxi Wang, Minghao Gou',
     author_email='gouminghao@gmail.com',
