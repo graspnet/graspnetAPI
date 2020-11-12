@@ -1,6 +1,7 @@
 """
 Setup of meshpy python codebase
 Author: Jeff Mahler
+Modified by Minghao Gou
 """
 from setuptools import setup, find_packages
 
