@@ -22,20 +22,15 @@ MAINTENANCE, SUPPORT, UPDATES, ENHANCEMENTS, OR MODIFICATIONS.
 """
 Setup of Dex-Net python codebase
 Author: Jeff Mahler
+Modified by Minghao Gou
 """
 from setuptools import setup, find_packages
 
-requirements = [
-    'cvxopt',
-    'dill',
-    'h5py'
-]
 
 setup(name='dexnet',
       version='0.2.0',
       description='Dex-Net project code',
       author='Jeff Mahler',
       author_email='jmahler@berkeley.edu',
-      packages=find_packages(),
-      install_requires=requirements
+      packages=find_packages()
      )
