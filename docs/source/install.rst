@@ -44,13 +44,13 @@ Dexnet Model Cache
 ------------------
 
 Dexnet model cache is optional without which the evaluation will be much slower(about 10x time slower).
-You can both download the file or generate it by yourself by running gen_pickle_dexmodel.py_.
+You can both download the file or generate it by yourself by running gen_pickle_dexmodel.py_(recommended). 
 
 .. _gen_pickle_dexmodel.py: https://github.com/graspnet/graspnetAPI/blob/master/gen_pickle_dexmodel.py
 
 Install API
 ^^^^^^^^^^^
-You may install usign pip::
+You may install using pip::
     
     pip install graspnetAPI
 
