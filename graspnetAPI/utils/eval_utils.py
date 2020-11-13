@@ -342,18 +342,11 @@ def eval_grasp(grasp_group, models, dexnet_models, poses, config, table=None, vo
     '''
     num_models = len(models)
     ## grasp nms
-    tic = time.time()
     grasp_group = grasp_group.nms(0.03, 30.0/180*np.pi)
-    # print(f'## EVAL ##, Input grasps:{len(grasp_group)}')
-    # print(len(grasp_group))
-    toc = time.time()
-    # print('nms time: %f' % (toc-tic))
 
     ## assign grasps to object
     # merge and sample scene
-    tic = time.time()
     model_trans_list = list()
-    # model_list = list()
     seg_mask = list()
     for i,model in enumerate(models):
         model_trans = transform_points(model, poses[i])
@@ -363,47 +356,34 @@ def eval_grasp(grasp_group, models, dexnet_models, poses, config, table=None, vo
     seg_mask = np.concatenate(seg_mask, axis=0)
     scene = np.concatenate(model_trans_list, axis=0)
     toc = time.time()
-    # print('pre-assign time: %f' % (toc-tic))
-    # scene = np.concatenate(model_list, axis=0)
+
     # assign grasps
-    tic = time.time()
     indices = compute_closest_points(grasp_group.translations, scene)
     model_to_grasp = seg_mask[indices]
     grasp_list = list()
     for i in range(num_models):
-        grasp_i = grasp_group.grasp_group_array[model_to_grasp==i]
-        if len(grasp_i) == 0:
-            grasp_list.append(np.array([[]]))
-            continue
-        grasp_i = topk_grasps(grasp_i, k=10)
-        grasp_list.append(grasp_i)
-        # print(grasp_list)
-    toc = time.time()
-    # print('grasp assigning time: %f' % (toc-tic))
+        grasp_i = grasp_group[model_to_grasp==i]
+        grasp_i.sort_by_score()
+        grasp_list.append(grasp_i[:10].grasp_group_array)
 
     ## collision detection
-    tic = time.time()
     if table is not None:
         scene = np.concatenate([scene, table])
-    toc = time.time()
-    # print('pre detection time: %f' % (toc-tic))
-    tic = time.time()
+
     collision_mask_list, empty_list, dexgrasp_list = collision_detection(
         grasp_list, model_trans_list, dexnet_models, poses, scene, outlier=0.05, return_dexgrasps=True)
-    toc = time.time()
-    # print('collision detection time: %f' % (toc-tic))
     
     ## evaluate grasps
     # score configurations
     force_closure_quality_config = dict()
-    fc_list = np.array([1.2,1.1, 1.0, 0.9, 0.8, 0.7, 0.6, 0.5, 0.4, 0.3, 0.2, 0.1])
+    fc_list = np.array([1.2, 1.0, 0.8, 0.6, 0.4, 0.2])
     for value_fc in fc_list:
         value_fc = round(value_fc, 2)
         config['metrics']['force_closure']['friction_coef'] = value_fc
         force_closure_quality_config[value_fc] = GraspQualityConfigFactory.create_config(config['metrics']['force_closure'])
     # get grasp scores
     score_list = list()
-    tic = time.time()
+    
     for i in range(num_models):
         dexnet_model = dexnet_models[i]
         collision_mask = collision_mask_list[i]
@@ -420,9 +400,6 @@ def eval_grasp(grasp_group, models, dexnet_models, poses, config, table=None, vo
             grasp = dexgrasps[grasp_id]
             score = get_grasp_score(grasp, dexnet_model, fc_list, force_closure_quality_config)
             scores.append(score)
-            #print(score)
         score_list.append(np.array(scores))
-    toc = time.time()
-    # print('grasp evaluation time: %f' % (toc-tic))
-    # print(score_list, collision_mask_list)
+
     return grasp_list, score_list, collision_mask_list
