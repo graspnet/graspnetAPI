@@ -29,8 +29,8 @@ import copy
 import logging
 import numpy as np
 
-import meshpy.mesh as m
-import meshpy.sdf as s
+from .meshpy import mesh as m
+from .meshpy import sdf as s
 
 import IPython
 import matplotlib.pyplot as plt

@@ -47,17 +47,12 @@ from .grasp import PointGrasp
 from. graspable_object import GraspableObject3D
 from .grasp_quality_config import GraspQualityConfig
 
-import meshpy.obj_file as obj_file
-import meshpy.sdf_file as sdf_file
+from .meshpy import mesh as m
+from .meshpy import sdf as s
 
 import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D
 
-try:
-    import mayavi.mlab as mv
-except:
-    # logging.warning('Failed to import mayavi')
-    pass
 import IPython
 
 # turn off output logging

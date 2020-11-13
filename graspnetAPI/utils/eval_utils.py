@@ -6,13 +6,13 @@ from transforms3d.euler import euler2mat, quat2mat
 
 from .rotation import batch_viewpoint_params_to_matrix, matrix_to_dexnet_params
 
-from dexnet.grasping.quality import PointGraspMetrics3D
-from dexnet.grasping.grasp import ParallelJawPtGrasp3D 
-from dexnet.grasping.graspable_object import GraspableObject3D
-from dexnet.grasping.grasp_quality_config import GraspQualityConfigFactory
-from dexnet.grasping.contacts import Contact3D
-from meshpy.obj_file import ObjFile
-from meshpy.sdf_file import SdfFile
+from .dexnet.grasping.quality import PointGraspMetrics3D
+from .dexnet.grasping.grasp import ParallelJawPtGrasp3D 
+from .dexnet.grasping.graspable_object import GraspableObject3D
+from .dexnet.grasping.grasp_quality_config import GraspQualityConfigFactory
+from .dexnet.grasping.contacts import Contact3D
+from .dexnet.grasping.meshpy.obj_file import ObjFile
+from .dexnet.grasping.meshpy.sdf_file import SdfFile
 
 def get_scene_name(num):
     '''
