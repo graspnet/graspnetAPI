@@ -113,32 +113,24 @@ class GraspNetEval(GraspNet):
         TOP_K = 50
         list_coe_of_friction = [0.2,0.4,0.6,0.8,1.0,1.2]
 
-        # for scene_id in range(115,116):
         model_list, dexmodel_list, _ = self.get_scene_models(scene_id, ann_id=0)
-        # print('model loading time: %f' % (toc-tic))
+
         model_sampled_list = list()
-        # tic = time.time()
         for model in model_list:
             model_sampled = voxel_sample_points(model, 0.008)
             model_sampled_list.append(model_sampled)
-        # toc = time.time()
-        # print('model voxel sample time: %f' % (toc-tic))
+
         scene_accuracy = []
         grasp_list_list = []
         score_list_list = []
         collision_list_list = []
 
         for ann_id in range(256):
-            # print('scene id:{}, ann id:{}'.format(scene_id, ann_id))
-            # grasps = np.array(np.load(os.path.join(dump_folder,get_scene_name(scene_id), camera, '%04d.npz' % (ann_id,)))['preds'][0])
             grasp_group = GraspGroup().from_npy(os.path.join(dump_folder,get_scene_name(scene_id), self.camera, '%04d.npy' % (ann_id,)))
             _, pose_list, camera_pose, align_mat = self.get_model_poses(scene_id, ann_id)
             table_trans = transform_points(table, np.linalg.inv(np.matmul(align_mat, camera_pose)))
 
-            # model level list
-            # tic = time.time()
             grasp_list, score_list, collision_mask_list = eval_grasp(grasp_group, model_sampled_list, dexmodel_list, pose_list, config, table=table_trans, voxel_size=0.008)
-            # toc = time.time()
 
             # concat into scene level
             # remove empty
@@ -147,32 +139,33 @@ class GraspNetEval(GraspNet):
             collision_mask_list = [x for x in collision_mask_list if len(x)!=0]
 
             grasp_list, score_list, collision_mask_list = np.concatenate(grasp_list), np.concatenate(score_list), np.concatenate(collision_mask_list)
-            # print(f'grasp list:{grasp_list}, len = {len(grasp_list)}')
-            # print(f'score list:{score_list}, len = {len(score_list)}')
-            # print(f'collision mask list:{collision_mask_list}, len = {len(collision_mask_list)}')
+            
             if vis:
                 t = o3d.geometry.PointCloud()
                 t.points = o3d.utility.Vector3dVector(table_trans)
                 model_list = generate_scene_model(self.root, 'scene_%04d' % scene_id , ann_id, return_poses=False, align=False, camera=self.camera)
-                gg = GraspGroup(grasp_list)
+                import copy
+                gg = GraspGroup(copy.deepcopy(grasp_list))
                 scores = np.array(score_list)
                 scores = scores / 2 + 0.5 # -1 -> 0, 0 -> 0.5, 1 -> 1
                 scores[collision_mask_list] = 0.3
-                gg.set_scores(scores)
-                gg.set_widths(0.1 * np.ones((len(gg)), dtype = np.float32))
+                gg.scores = scores
+                gg.widths = 0.1 * np.ones((len(gg)), dtype = np.float32)
                 grasps_geometry = gg.to_open3d_geometry_list()
                 pcd = self.loadScenePointCloud(scene_id, self.camera, ann_id)
 
                 o3d.visualization.draw_geometries([pcd, *grasps_geometry])
                 o3d.visualization.draw_geometries([pcd, *grasps_geometry, *model_list])
                 o3d.visualization.draw_geometries([*grasps_geometry, *model_list, t])
-            grasp_list_list.append(grasp_list)
-            score_list_list.append(score_list)
-            collision_list_list.append(collision_mask_list)
+            
             # sort in scene level
             grasp_confidence = grasp_list[:,0]
             indices = np.argsort(-grasp_confidence)
             grasp_list, score_list, collision_mask_list = grasp_list[indices], score_list[indices], collision_mask_list[indices]
+
+            grasp_list_list.append(grasp_list)
+            score_list_list.append(score_list)
+            collision_list_list.append(collision_mask_list)
 
             #calculate AP
             grasp_accuracy = np.zeros((TOP_K,len(list_coe_of_friction)))
@@ -183,7 +176,7 @@ class GraspNetEval(GraspNet):
                     else:
                         grasp_accuracy[k,fric_idx] = np.sum(((score_list[0:k+1]<=fric) & (score_list[0:k+1]>0)).astype(int))/(k+1)
 
-            print('\rMean Accuracy for scene:{} ann:{}='.format(scene_id, ann_id),np.mean(grasp_accuracy[:,:]), end='')
+            print('\rMean Accuracy for scene:%04d ann:%04d = %.3f' % (scene_id, ann_id, 100.0 * np.mean(grasp_accuracy[:,:])), end='')
             scene_accuracy.append(grasp_accuracy)
         if not return_list:
             return scene_accuracy
