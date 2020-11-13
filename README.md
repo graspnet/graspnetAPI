@@ -5,17 +5,17 @@
 Visit the [GraspNet Website](http://graspnet.net) to get the dataset.
 
 ## Install
-You can install from Pypi
+You can install using pip.
 ```bash
 pip install graspnetAPI
 ```
 
-But we recommand installing form source.
+You can also install from source.
 
 ```bash
 git clone https://github.com/graspnet/graspnetAPI.git
 cd graspnetAPI
-bash install.sh
+pip install .
 ```
 
 ## Document

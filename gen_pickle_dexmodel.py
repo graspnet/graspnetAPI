@@ -6,7 +6,7 @@ import pickle
 import os
 
 ##### Change the root to your path #####
-graspnet_root = '/home/minghao/graspnet'
+graspnet_root = '/home/gmh/graspnet'
 
 ##### Do NOT change this folder name #####
 dex_folder = 'dex_models'

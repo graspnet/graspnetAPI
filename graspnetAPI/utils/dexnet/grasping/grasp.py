@@ -33,7 +33,7 @@ from numpy.linalg import inv, norm
 import time
 
 from autolab_core import Point, RigidTransform
-from meshpy import Sdf3D, StablePose
+from .meshpy import Sdf3D, StablePose
 
 
 from ..abstractstatic import abstractstatic

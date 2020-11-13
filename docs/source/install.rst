@@ -8,7 +8,7 @@ Installation
 Prerequisites
 ^^^^^^^^^^^^^
 
-Python version should be no less than 3.6. 
+Python version under 3.6 is not tested. 
 
 Dataset
 ^^^^^^^
@@ -50,12 +50,12 @@ You can both download the file or generate it by yourself by running gen_pickle_
 
 Install API
 ^^^^^^^^^^^
-You may install from PyPi::
+You may install usign pip::
     
     pip install graspnetAPI
 
-But we recommand installing from source::
+You can also install from source::
 
-    $ git clone https://github.com/graspnet/graspnetAPI.git
-    $ cd graspnetAPI/
-    $ bash install.sh
+    git clone https://github.com/graspnet/graspnetAPI.git
+    cd graspnetAPI/
+    pip install .

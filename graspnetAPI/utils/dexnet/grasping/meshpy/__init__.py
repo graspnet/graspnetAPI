@@ -12,6 +12,9 @@ from .obj_file import ObjFile
 from .sdf import Sdf, Sdf3D
 from .sdf_file import SdfFile
 from .stable_pose import StablePose
+from . import mesh
+from . import obj_file
+from . import sdf_file
 # from .stp_file import StablePoseFile
 # from .urdf_writer import UrdfWriter, convex_decomposition
 # from .lighting import MaterialProperties, LightingProperties
@@ -20,4 +23,4 @@ from .stable_pose import StablePose
 # from .random_variables import CameraSample, RenderSample, UniformViewsphereRandomVariable, \
     # UniformPlanarWorksurfaceRandomVariable, UniformPlanarWorksurfaceImageRandomVariable
 
-__all__ = ['Mesh3D','ObjFile','Sdf','Sdf3D','SdfFile','StablePose']
+__all__ = ['Mesh3D','ObjFile','Sdf','Sdf3D','SdfFile','StablePose','mesh','obj_file','sdf_file']
