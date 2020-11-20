@@ -1,10 +1,14 @@
+__author__ = 'mhgou'
+
 from graspnetAPI.utils.eval_utils import load_dexnet_model
 from tqdm import tqdm
 import pickle
 import os
 
-graspnet_root = '/home/minghao/graspnet'
+##### Change the root to your path #####
+graspnet_root = '/home/gmh/graspnet'
 
+##### Do NOT change this folder name #####
 dex_folder = 'dex_models'
 if not os.path.exists(dex_folder):
     os.makedirs(dex_folder)

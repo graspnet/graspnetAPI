@@ -10,5 +10,4 @@
 /.vscode/
 /graspnms/build/
 *.npy
-*.png
 /graspnms/grasp_nms.cpp

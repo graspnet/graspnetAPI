@@ -13,10 +13,10 @@ if __name__ == '__main__':
     ####################################################################
 
     g = GraspNet(graspnet_root, 'kinect', 'all')
-    if g.check_data_completeness():
+    if g.checkDataCompleteness():
         print('Check for kinect passed')
 
 
     g = GraspNet(graspnet_root, 'realsense', 'all')
-    if g.check_data_completeness():
+    if g.checkDataCompleteness():
         print('Check for kinect passed')

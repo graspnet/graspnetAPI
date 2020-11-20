@@ -58,7 +58,6 @@ def generate_views(N, phi=(np.sqrt(5)-1)/2, center=np.zeros(3, dtype=np.float32)
     return views
 
 def generate_scene_model(dataset_root, scene_name, anno_idx, return_poses=False, align=False, camera='realsense'):
-
     if align:
         camera_poses = np.load(os.path.join(dataset_root, 'scenes', scene_name, camera, 'camera_poses.npy'))
         camera_pose = camera_poses[anno_idx]
@@ -412,84 +411,6 @@ def get_obj_pose_list(camera_pose, pose_vectors):
         pose_list.append(pose)
 
     return obj_list, pose_list
-
-# def scene_collision_detection(scene_idx, anno_idx, save_dir, sample_size=0.005, outlier=0.08, camera='realsense'):
-#     print('scene {} started!'.format(scene_idx))
-#     if not os.path.exists(save_dir):
-#         os.makedirs(save_dir)
-#     model_list, obj_list, pose_list = generate_scene(scene_idx, anno_idx, return_poses=True, align=True, camera=camera)
-#     table = create_table_cloud(1.0, 0.05, 1.0, dx=-0.5, dy=-0.5, dz=0, grid_size=0.001)
-#     num_views, num_angles, num_depths = 300, 12, 4
-#     viewpoints = generate_views(num_views)
-#     height = 0.02
-#     depth_base = 0.02
-#     finger_width = 0.01
-#     collision_masks = []
-
-#     # merge scene
-#     scene = [np.array(table.points)]
-#     for model in model_list:
-#         scene.append(np.array(model.points))
-#     scene = np.concatenate(scene, axis=0)
-
-#     for i, (obj_idx, trans) in enumerate(zip(obj_list, pose_list)):
-#         print(obj_idx)
-#         points, offsets, _, collision = get_model_grasps('%s/%03d_labels.npz'%(labeldir, obj_idx))
-#         # crop scene
-#         scene_trans = transform_points(scene, np.linalg.inv(trans))
-#         xmin, xmax = points[:,0].min(), points[:,0].max()
-#         ymin, ymax = points[:,1].min(), points[:,1].max()
-#         zmin, zmax = points[:,2].min(), points[:,2].max()
-#         xlim = ((scene_trans[:,0] > xmin-outlier) & (scene_trans[:,0] < xmax+outlier))
-#         ylim = ((scene_trans[:,1] > ymin-outlier) & (scene_trans[:,1] < ymax+outlier))
-#         zlim = ((scene_trans[:,2] > zmin-outlier) & (scene_trans[:,2] < zmax+outlier))
-#         workspace = scene_trans[xlim & ylim & zlim]
-#         # sample workspace
-#         o3cloud = o3d.PointCloud()
-#         o3cloud.points = o3d.Vector3dVector(workspace)
-#         o3cloud = o3d.voxel_down_sample(o3cloud, sample_size)
-#         workspace = np.array(o3cloud.points, dtype=np.float32)
-#         # print(workspace.shape[0])
-#         # # remove empty grasp points
-#         # min_dists = compute_min_dist(points, workspace)
-#         # points_in_scene = (min_dists < 0.01)
-        
-#         collision_mask = collision.astype(np.bool)
-#         for j, grasp_point in enumerate(points):
-#             print('{}/{}'.format(j,len(points)))
-#             # if not points_in_scene[j]:
-#             #     collision_mask[j] = True
-#             #     continue
-#             grasp_angle = offsets[j, :, :, :, 0:1]
-#             grasp_depth = offsets[j, :, :, :, 1:2]
-#             grasp_width = offsets[j, :, :, :, 2:3]
-#             batch_viewpoints = np.tile(viewpoints, [1,num_angles*num_depths]).reshape(-1,3)
-#             batch_angle = grasp_angle.reshape(-1)
-#             grasp_poses = batch_viewpoint_params_to_matrix(-batch_viewpoints, batch_angle)
-#             target = np.expand_dims(workspace-grasp_point, 0)
-#             target = np.matmul(target, grasp_poses)
-#             target = target.reshape([num_views, num_angles, num_depths, -1, 3])
-            
-#             mask1 = ((target[:,:,:,:,2]>-height/2) & (target[:,:,:,:,2]<height/2))
-#             mask2 = ((target[:,:,:,:,0]>-depth_base) & (target[:,:,:,:,0]<grasp_depth))
-#             mask3 = (target[:,:,:,:,1]>-(grasp_width/2+finger_width))
-#             mask4 = (target[:,:,:,:,1]<-grasp_width/2)
-#             mask5 = (target[:,:,:,:,1]<(grasp_width/2+finger_width))
-#             mask6 = (target[:,:,:,:,1]>grasp_width/2)
-#             mask7 = ((target[:,:,:,:,0]>-(depth_base+finger_width)) & (target[:,:,:,:,0]<-depth_base))
-#             left_mask = (mask1 & mask2 & mask3 & mask4)
-#             right_mask = (mask1 & mask2 & mask5 & mask6)
-#             bottom_mask = (mask1 & mask3 & mask5 & mask7)
-#             mask = np.any((left_mask | right_mask | bottom_mask), axis=-1)
-#             collision_mask[j] = (collision_mask[j] | mask)
-
-#         collision_masks.append(collision_mask)
-
-#     np.savez('{}/collision_labels.npz'.format(save_dir, scene_idx, camera), *collision_masks)
-#     print('scene {} finished!'.format(scene_idx))
-
-
-# Rectangle Grasp Generation
 
 def batch_rgbdxyz_2_rgbxy_depth(points, camera):
     '''

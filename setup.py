@@ -1,23 +1,24 @@
 from distutils.core import setup
 from setuptools import find_packages
+from setuptools.command.install import install
+import os
 
 setup(
     name='graspnetAPI',
-    version='0.1',
+    version='1.2.2',
     description='graspnet API',
-    author='Hao-shu Fang, Chenxi Wang, Minghao Gou',
-    author_email='fhaoshu@gmail.com',
-    url='graspnet.net',
+    author='Hao-Shu Fang, Chenxi Wang, Minghao Gou',
+    author_email='gouminghao@gmail.com',
+    url='https://graspnet.net',
     packages=find_packages(),
     install_requires=[
         'numpy',
-        'cython',
         'scipy',
         'transforms3d==0.3.1',
         'open3d>=0.8.0.0',
-        'trimesh==3.8.4',
-        'tqdm==4.48.2',
-        'Pillow==7.2.0',
+        'trimesh',
+        'tqdm',
+        'Pillow',
         'opencv-python',
         'pillow',
         'matplotlib',
@@ -25,6 +26,11 @@ setup(
         'trimesh',
         'scikit-image',
         'autolab_core',
-        'autolab-perception'
+        'autolab-perception',
+        'cvxopt',
+        'dill',
+        'h5py',
+        'sklearn',
+        'grasp_nms'
     ]
 )
