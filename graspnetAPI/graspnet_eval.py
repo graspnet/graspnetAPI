@@ -107,6 +107,15 @@ class GraspNetEval(GraspNet):
             score_list = [x for x in score_list if len(x)!=0]
             collision_mask_list = [x for x in collision_mask_list if len(x)!=0]
 
+            if len(grasp_list) == 0:
+                grasp_accuracy = np.zeros((TOP_K,len(list_coe_of_friction)))
+                scene_accuracy.append(grasp_accuracy)
+                grasp_list_list.append([])
+                score_list_list.append([])
+                collision_list_list.append([])
+                print('\rMean Accuracy for scene:{} ann:{}='.format(scene_id, ann_id),np.mean(grasp_accuracy[:,:]), end='')
+                continue
+
             grasp_list, score_list, collision_mask_list = np.concatenate(grasp_list), np.concatenate(score_list), np.concatenate(collision_mask_list)
             # print(f'grasp list:{grasp_list}, len = {len(grasp_list)}')
             # print(f'score list:{score_list}, len = {len(score_list)}')
@@ -165,7 +174,7 @@ class GraspNetEval(GraspNet):
             # print('Mean Accuracy for grasps under friction_coef {}'.format(list_coe_of_friction[4]), np.mean(grasp_accuracy[:,4])) # 0.5
             # print('Mean Accuracy for grasps under friction_coef {}'.format(list_coe_of_friction[6]), np.mean(grasp_accuracy[:,6])) # 0.7
             # print('Mean Accuracy for grasps under friction_coef {}'.format(list_coe_of_friction[8]), np.mean(grasp_accuracy[:,8])) # 0.9
-            print('\rMean Accuracy for scene:{} ann:{}='.format(scene_id, ann_id),np.mean(grasp_accuracy[:,:]), end='')
+            print('\rMean Accuracy for scene:{} ann:{}='.format(scene_id, ann_id),np.mean(grasp_accuracy[:,:]), end='', flush=True)
             scene_accuracy.append(grasp_accuracy)
         if not return_list:
             return scene_accuracy
@@ -188,7 +197,19 @@ class GraspNetEval(GraspNet):
     def eval_seen(self, dump_folder, proc = 2):
         res = np.array(self.parallel_eval_scenes(scene_ids = list(range(100, 130)), dump_folder = dump_folder, proc = proc))
         ap = np.mean(res)
-        print('\nEvaluation Result:\n----------\n{}, AP={}, AP Seen={}'.format(self.camera, ap, ap))
+        print('\nEvaluation Result:\n----------\n{}, AP Seen={}'.format(self.camera, ap))
+        return res, ap
+
+    def eval_similar(self, dump_folder, proc = 2):
+        res = np.array(self.parallel_eval_scenes(scene_ids = list(range(130, 160)), dump_folder = dump_folder, proc = proc))
+        ap = np.mean(res)
+        print('\nEvaluation Result:\n----------\n{}, AP Similar={}'.format(self.camera, ap))
+        return res, ap
+
+    def eval_novel(self, dump_folder, proc = 2):
+        res = np.array(self.parallel_eval_scenes(scene_ids = list(range(160, 190)), dump_folder = dump_folder, proc = proc))
+        ap = np.mean(res)
+        print('\nEvaluation Result:\n----------\n{}, AP Novel={}'.format(self.camera, ap))
         return res, ap
 
     def eval_all(self, dump_folder, proc = 2):
