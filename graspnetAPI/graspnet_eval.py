@@ -92,13 +92,15 @@ class GraspNetEval(GraspNet):
             pose_list.append(mat)
         return obj_list, pose_list, camera_pose, align_mat
         
-    def eval_scene(self, scene_id, dump_folder, return_list = False,vis = False):
+    def eval_scene(self, scene_id, dump_folder, TOP_K = 50, return_list = False,vis = False):
         '''
         **Input:**
 
         - scene_id: int of the scene index.
         
         - dump_folder: string of the folder that saves the dumped npy files.
+
+        - TOP_K: int of the top number of grasp to evaluate
 
         - return_list: bool of whether to return the result list.
 
@@ -110,7 +112,7 @@ class GraspNetEval(GraspNet):
         '''
         config = get_config()
         table = create_table_points(1.0, 1.0, 0.05, dx=-0.5, dy=-0.5, dz=-0.05, grid_size=0.008)
-        TOP_K = 50
+        
         list_coe_of_friction = [0.2,0.4,0.6,0.8,1.0,1.2]
 
         model_list, dexmodel_list, _ = self.get_scene_models(scene_id, ann_id=0)
@@ -130,7 +132,7 @@ class GraspNetEval(GraspNet):
             _, pose_list, camera_pose, align_mat = self.get_model_poses(scene_id, ann_id)
             table_trans = transform_points(table, np.linalg.inv(np.matmul(align_mat, camera_pose)))
 
-            grasp_list, score_list, collision_mask_list = eval_grasp(grasp_group, model_sampled_list, dexmodel_list, pose_list, config, table=table_trans, voxel_size=0.008)
+            grasp_list, score_list, collision_mask_list = eval_grasp(grasp_group, model_sampled_list, dexmodel_list, pose_list, config, table=table_trans, voxel_size=0.008, TOP_K = TOP_K)
 
             # concat into scene level
             # remove empty

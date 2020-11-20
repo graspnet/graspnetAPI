@@ -228,6 +228,8 @@ def collision_detection(grasp_list, model_list, dexnet_models, poses, scene_poin
     dexgrasp_list = list()
 
     for i in range(num_models):
+        print(f'len grasp_list[{i}]:{len(grasp_list[i][0])}')
+        print(f'grasp_list[{i}][0]:{grasp_list[i][0]}')
         if len(grasp_list[i][0]) == 0:
             collision_mask_list.append(list())
             empty_mask_list.append(list())
@@ -330,15 +332,25 @@ def collision_detection(grasp_list, model_list, dexnet_models, poses, scene_poin
     else:
         return collision_mask_list, empty_mask_list
 
-def eval_grasp(grasp_group, models, dexnet_models, poses, config, table=None, voxel_size=0.008):
+def eval_grasp(grasp_group, models, dexnet_models, poses, config, table=None, voxel_size=0.008, TOP_K = 50):
     '''
     **Input:**
     
+    - grasp_group: GraspGroup instance for evaluation.
+
     - models: in model coordinate
+
+    - dexnet_models: models in dexnet format 
     
     - poses: from model to camera coordinate
+
+    - config: dexnet config.
     
     - table: in camera coordinate
+
+    - voxel_size: float of the voxel size.
+
+    - TOP_K: int of the number of top grasps to evaluate.
     '''
     num_models = len(models)
     ## grasp nms
@@ -360,12 +372,27 @@ def eval_grasp(grasp_group, models, dexnet_models, poses, config, table=None, vo
     # assign grasps
     indices = compute_closest_points(grasp_group.translations, scene)
     model_to_grasp = seg_mask[indices]
-    grasp_list = list()
+    pre_grasp_list = list()
     for i in range(num_models):
         grasp_i = grasp_group[model_to_grasp==i]
         grasp_i.sort_by_score()
-        grasp_list.append(grasp_i[:10].grasp_group_array)
-
+        pre_grasp_list.append(grasp_i[:10].grasp_group_array)
+    for i in range(num_models):
+        print(f'pre grasp len {i} = {len(pre_grasp_list[i])}')
+    all_grasp_list = np.vstack(pre_grasp_list)
+    # print(f'all_grasp_list:{all_grasp_list}')
+    remain_mask = np.argsort(all_grasp_list[:,0])[::-1]
+    min_score = all_grasp_list[remain_mask[50],0]
+    # print(f'min score:{min_score}')
+    grasp_list = []
+    for i in range(num_models):
+        remain_mask_i = pre_grasp_list[i][:,0] > min_score
+        grasp_list.append(pre_grasp_list[i][remain_mask_i])
+    #     print(f'grasp list i:{pre_grasp_list[i]}')
+    # print(f'grasp list:{grasp_list}')
+    for i in range(num_models):
+        print(f'grasp len {i} = {len(grasp_list[i])}')
+    grasp_list = pre_grasp_list
     ## collision detection
     if table is not None:
         scene = np.concatenate([scene, table])
