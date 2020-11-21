@@ -136,8 +136,8 @@ class GraspNetEval(GraspNet):
 
             # concat into scene level
             # remove empty
-            grasp_list = [x for x in grasp_list if len(x)! = 0]
-            score_list = [x for x in score_list if len(x)! = 0]
+            grasp_list = [x for x in grasp_list if len(x) != 0]
+            score_list = [x for x in score_list if len(x) != 0]
             collision_mask_list = [x for x in collision_mask_list if len(x)!=0]
 
             if len(grasp_list) == 0:
