@@ -92,13 +92,15 @@ class GraspNetEval(GraspNet):
             pose_list.append(mat)
         return obj_list, pose_list, camera_pose, align_mat
         
-    def eval_scene(self, scene_id, dump_folder, return_list = False,vis = False):
+    def eval_scene(self, scene_id, dump_folder, TOP_K = 50, return_list = False,vis = False):
         '''
         **Input:**
 
         - scene_id: int of the scene index.
         
         - dump_folder: string of the folder that saves the dumped npy files.
+
+        - TOP_K: int of the top number of grasp to evaluate
 
         - return_list: bool of whether to return the result list.
 
@@ -110,7 +112,7 @@ class GraspNetEval(GraspNet):
         '''
         config = get_config()
         table = create_table_points(1.0, 1.0, 0.05, dx=-0.5, dy=-0.5, dz=-0.05, grid_size=0.008)
-        TOP_K = 50
+        
         list_coe_of_friction = [0.2,0.4,0.6,0.8,1.0,1.2]
 
         model_list, dexmodel_list, _ = self.get_scene_models(scene_id, ann_id=0)
@@ -130,13 +132,22 @@ class GraspNetEval(GraspNet):
             _, pose_list, camera_pose, align_mat = self.get_model_poses(scene_id, ann_id)
             table_trans = transform_points(table, np.linalg.inv(np.matmul(align_mat, camera_pose)))
 
-            grasp_list, score_list, collision_mask_list = eval_grasp(grasp_group, model_sampled_list, dexmodel_list, pose_list, config, table=table_trans, voxel_size=0.008)
+            grasp_list, score_list, collision_mask_list = eval_grasp(grasp_group, model_sampled_list, dexmodel_list, pose_list, config, table=table_trans, voxel_size=0.008, TOP_K = TOP_K)
 
             # concat into scene level
             # remove empty
-            grasp_list = [x for x in grasp_list if len(x[0])!= 0]
-            score_list = [x for x in score_list if len(x)!=0]
+            grasp_list = [x for x in grasp_list if len(x) != 0]
+            score_list = [x for x in score_list if len(x) != 0]
             collision_mask_list = [x for x in collision_mask_list if len(x)!=0]
+
+            if len(grasp_list) == 0:
+                grasp_accuracy = np.zeros((TOP_K,len(list_coe_of_friction)))
+                scene_accuracy.append(grasp_accuracy)
+                grasp_list_list.append([])
+                score_list_list.append([])
+                collision_list_list.append([])
+                print('\rMean Accuracy for scene:{} ann:{}='.format(scene_id, ann_id),np.mean(grasp_accuracy[:,:]), end='')
+                continue
 
             grasp_list, score_list, collision_mask_list = np.concatenate(grasp_list), np.concatenate(score_list), np.concatenate(collision_mask_list)
             
@@ -176,7 +187,7 @@ class GraspNetEval(GraspNet):
                     else:
                         grasp_accuracy[k,fric_idx] = np.sum(((score_list[0:k+1]<=fric) & (score_list[0:k+1]>0)).astype(int))/(k+1)
 
-            print('\rMean Accuracy for scene:%04d ann:%04d = %.3f' % (scene_id, ann_id, 100.0 * np.mean(grasp_accuracy[:,:])), end='')
+            print('\rMean Accuracy for scene:%04d ann:%04d = %.3f' % (scene_id, ann_id, 100.0 * np.mean(grasp_accuracy[:,:])), end='', flush=True)
             scene_accuracy.append(grasp_accuracy)
         if not return_list:
             return scene_accuracy
@@ -225,7 +236,19 @@ class GraspNetEval(GraspNet):
         '''
         res = np.array(self.parallel_eval_scenes(scene_ids = list(range(100, 130)), dump_folder = dump_folder, proc = proc))
         ap = np.mean(res)
-        print('\nEvaluation Result:\n----------\n{}, AP={}, AP Seen={}'.format(self.camera, ap, ap))
+        print('\nEvaluation Result:\n----------\n{}, AP Seen={}'.format(self.camera, ap))
+        return res, ap
+
+    def eval_similar(self, dump_folder, proc = 2):
+        res = np.array(self.parallel_eval_scenes(scene_ids = list(range(130, 160)), dump_folder = dump_folder, proc = proc))
+        ap = np.mean(res)
+        print('\nEvaluation Result:\n----------\n{}, AP Similar={}'.format(self.camera, ap))
+        return res, ap
+
+    def eval_novel(self, dump_folder, proc = 2):
+        res = np.array(self.parallel_eval_scenes(scene_ids = list(range(160, 190)), dump_folder = dump_folder, proc = proc))
+        ap = np.mean(res)
+        print('\nEvaluation Result:\n----------\n{}, AP Novel={}'.format(self.camera, ap))
         return res, ap
 
     def eval_similar(self, dump_folder, proc = 2):

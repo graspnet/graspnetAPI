@@ -22,7 +22,7 @@ copyright = '2020, MVIG, Shanghai Jiao Tong University'
 author = 'graspnet'
 
 # The full version, including alpha/beta/rc tags
-release = '1.2.2'
+release = '1.2.3'
 
 
 # -- General configuration ---------------------------------------------------
