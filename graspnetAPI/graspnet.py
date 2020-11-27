@@ -435,7 +435,7 @@ class GraspNet():
         y2 = len(masky) - np.argmax(masky[::-1]) 
         return (x1, y1, x2, y2)
 
-    def loadScenePointCloud(self, sceneId, camera, annId, align=False, format = 'open3d', use_workspace = False, use_mask = False):
+    def loadScenePointCloud(self, sceneId, camera, annId, align=False, format = 'open3d', use_workspace = False, use_mask = True):
         '''
         **Input:**
 
@@ -451,7 +451,8 @@ class GraspNet():
 
         - use_workspace: bool of whether crop the point cloud in the work space.
 
-        - use_mask: bool of thether crop the point cloud use mask(z>0).
+        - use_mask: bool of whether crop the point cloud use mask(z>0), only open3d 0.9.0 is supported for False option.
+                    Only turn to False if you know what you are doing.
 
         **Output:**
 
