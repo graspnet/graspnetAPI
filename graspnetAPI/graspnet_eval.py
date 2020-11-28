@@ -1,5 +1,4 @@
 __author__ = 'mhgou, cxwang and hsfang'
-__version__ = '1.0'
 
 import numpy as np
 import os

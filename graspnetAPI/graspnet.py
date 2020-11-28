@@ -1,5 +1,4 @@
 __author__ = 'hsfang, mhgou, cxwang'
-__version__ = '1.0'
 
 # Interface for accessing the GraspNet-1Billion dataset.
 # Description and part of the codes modified from MSCOCO api

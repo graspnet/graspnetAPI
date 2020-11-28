@@ -1,5 +1,4 @@
 __author__ = 'mhgou'
-__version__ = '1.0'
 
 import numpy as np
 import open3d as o3d
