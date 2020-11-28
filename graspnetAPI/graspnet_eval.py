@@ -240,18 +240,6 @@ class GraspNetEval(GraspNet):
         return res, ap
 
     def eval_similar(self, dump_folder, proc = 2):
-        res = np.array(self.parallel_eval_scenes(scene_ids = list(range(130, 160)), dump_folder = dump_folder, proc = proc))
-        ap = np.mean(res)
-        print('\nEvaluation Result:\n----------\n{}, AP Similar={}'.format(self.camera, ap))
-        return res, ap
-
-    def eval_novel(self, dump_folder, proc = 2):
-        res = np.array(self.parallel_eval_scenes(scene_ids = list(range(160, 190)), dump_folder = dump_folder, proc = proc))
-        ap = np.mean(res)
-        print('\nEvaluation Result:\n----------\n{}, AP Novel={}'.format(self.camera, ap))
-        return res, ap
-
-    def eval_similar(self, dump_folder, proc = 2):
         '''
         **Input:**
 
