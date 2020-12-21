@@ -91,7 +91,7 @@ class GraspNetEval(GraspNet):
             pose_list.append(mat)
         return obj_list, pose_list, camera_pose, align_mat
         
-    def eval_scene(self, scene_id, dump_folder, TOP_K = 50, return_list = False,vis = False):
+    def eval_scene(self, scene_id, dump_folder, TOP_K = 50, return_list = False,vis = False, max_width = 0.1):
         '''
         **Input:**
 
@@ -104,6 +104,8 @@ class GraspNetEval(GraspNet):
         - return_list: bool of whether to return the result list.
 
         - vis: bool of whether to show the result
+
+        - max_width: float of the maximum gripper width in evaluation
 
         **Output:**
 
@@ -131,9 +133,16 @@ class GraspNetEval(GraspNet):
             _, pose_list, camera_pose, align_mat = self.get_model_poses(scene_id, ann_id)
             table_trans = transform_points(table, np.linalg.inv(np.matmul(align_mat, camera_pose)))
 
+            # clip width to [0,max_width]
+            gg_array = grasp_group.grasp_group_array
+            min_width_mask = (gg_array[:,1] < 0)
+            max_width_mask = (gg_array[:,1] > max_width)
+            gg_array[min_width_mask,1] = 0
+            gg_array[max_width_mask,1] = max_width
+            grasp_group.grasp_group_array = gg_array
+
             grasp_list, score_list, collision_mask_list = eval_grasp(grasp_group, model_sampled_list, dexmodel_list, pose_list, config, table=table_trans, voxel_size=0.008, TOP_K = TOP_K)
 
-            # concat into scene level
             # remove empty
             grasp_list = [x for x in grasp_list if len(x) != 0]
             score_list = [x for x in score_list if len(x) != 0]
@@ -148,6 +157,7 @@ class GraspNetEval(GraspNet):
                 print('\rMean Accuracy for scene:{} ann:{}='.format(scene_id, ann_id),np.mean(grasp_accuracy[:,:]), end='')
                 continue
 
+            # concat into scene level
             grasp_list, score_list, collision_mask_list = np.concatenate(grasp_list), np.concatenate(score_list), np.concatenate(collision_mask_list)
             
             if vis:
