@@ -555,7 +555,7 @@ def center_depth(depths, center, open_point, upper_point):
 
     - depth: float of the grasp depth.
     '''
-    return depths[round(center[1]), round(center[0])]
+    return depths[int(round(center[1])), int(round(center[0]))]
 
 def batch_center_depth(depths, centers, open_points, upper_points):
     '''
