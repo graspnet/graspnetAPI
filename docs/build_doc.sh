@@ -1,6 +1,3 @@
-cd ..
-bash install.sh
-cd docs
 rm source/graspnetAPI.*
 rm source/modules.rst
 sphinx-apidoc -o ./source ../graspnetAPI

@@ -33,6 +33,12 @@ bash build_doc.sh
 
 LaTeX is required to build the pdf, but html can be built anyway.
 
+## Grasp Definition
+The frame of our gripper is defined as 
+<div align="center">
+    <img src="grasp_definition.png", width="400">
+</div>
+
 
 ## Examples
 ```bash
