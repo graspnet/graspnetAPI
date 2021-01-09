@@ -12,6 +12,7 @@ Welcome to graspnetAPI's documentation!
 
    about
    install
+   grasp_format
 
 Examples
 =========
@@ -23,7 +24,6 @@ Examples
    example_check_data
    example_generate_rectangle_labels
    example_loadGrasp
-   example_grasp_format
    example_vis
    example_nms
    example_convert

@@ -1,6 +1,14 @@
 graspnetAPI.utils package
 =========================
 
+Subpackages
+-----------
+
+.. toctree::
+   :maxdepth: 4
+
+   graspnetAPI.utils.dexnet
+
 Submodules
 ----------
 
