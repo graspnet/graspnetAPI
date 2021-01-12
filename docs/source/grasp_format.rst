@@ -36,9 +36,9 @@ The raw label on each object is a list of numpy arrays.
 
 - 'offsets' records the in-plane rotation, depth and width of the gripper respectively in the last dimension.
 
-- 'collision' records the bool mask for if the grasp pose is a collision with the model.
+- 'collision' records the bool mask for if the grasp pose collides with the model.
 
-- 'scores' records the minimum coefficient of friction between the gripper and object to achieve a stabel grasp.
+- 'scores' records the minimum coefficient of friction between the gripper and object to achieve a stable grasp.
 
 .. note::
     
