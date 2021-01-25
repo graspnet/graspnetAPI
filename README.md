@@ -71,3 +71,9 @@ Please cite these papers in your publications if it helps your research:
   year={2020}
 }
 ```
+
+## Change Log
+
+#### 1.2.6
+
+- Add transformation for Grasp and GraspGroup
