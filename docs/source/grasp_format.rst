@@ -139,7 +139,7 @@ Usually, there are a lot of grasps in a scene, :py:class:`GraspGroup` is a class
 Compared with :py:class:`Grasp`, :py:class:`GraspGroup` contains a 2D numpy array, the additional dimension is the index for each grasp.
 
 .. literalinclude:: ../../graspnetAPI/grasp.py
-    :lines: 185-202
+    :lines: 201-218
 
 Common operations on a list such as indexing, slicing and sorting are implemented. 
 Besides, one important function is that users can **dump** a GraspGroup into a numpy file and **load** it in another program by calling :py:func:`GraspGroup.save_npy` and :py:func:`GraspGroup.from_npy`.
@@ -150,7 +150,7 @@ Rectangle Grasp
 The detailed defition of each parameter is shown in the figure above and the coordinates for center point and open point are in the pixel frame.
 
 .. literalinclude:: ../../graspnetAPI/grasp.py
-    :lines: 521-540
+    :lines: 553-572
 
 Rectangle Grasp Group
 ^^^^^^^^^^^^^^^^^^^^^
@@ -158,9 +158,19 @@ Rectangle Grasp Group
 The format for :py:class:`RectGraspGroup` is similar to that of :py:class:`RectGrasp` and :py:class:`GraspGroup`.
 
 .. literalinclude:: ../../graspnetAPI/grasp.py
-    :lines: 720-737
+    :lines: 752-769
 
 .. note::
 
     We recommend users to access and modify the labels by provided functions although users can also manipulate the data directly but it is **Not Recommended**.
     Please refer to the Python API for more details.
+
+Grasp and GraspGroup Transformation
+-----------------------------------
+
+Users can transform a Grasp or GraspGroup giving a 4x4 matrix.
+
+.. literalinclude:: ../../examples/exam_grasp_format.py
+    :lines: 67-95
+
+.. image:: _static/transformation.png

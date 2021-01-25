@@ -129,7 +129,7 @@ class Grasp():
         - len(args) == 9: float of matrix
         '''
         if len(args) == 1:
-            self.grasp_array[4:13] = np.array(args[0],dtype = np.float64)
+            self.grasp_array[4:13] = np.array(args[0],dtype = np.float64).reshape(9)
         elif len(args) == 9:
             self.grasp_array[4:13] = np.array(args,dtype = np.float64)
 
@@ -168,11 +168,27 @@ class Grasp():
     @object_id.setter
     def object_id(self, object_id):
         '''
-        **input:**
+        **Input:**
 
         - int of the object_id.
         '''
         self.grasp_array[16] = object_id
+
+    def transform(self, T):
+        '''
+        **Input:**
+
+        - T: np.array of shape (4, 4)
+        
+        **Output:**
+
+        - Grasp instance after transformation, the original Grasp will also be changed.
+        '''
+        rotation = T[:3,:3]
+        translation = T[:3,3]
+        self.translation = np.dot(rotation, self.translation.reshape((3,1))).reshape(-1) + translation
+        self.rotation_matrix = np.dot(rotation, self.rotation_matrix)
+        return self
 
     def to_open3d_geometry(self):
         '''
@@ -379,6 +395,22 @@ class GraspGroup():
         '''
         assert object_ids.size == len(self)
         self.grasp_group_array[:,16] = copy.deepcopy(object_ids)
+
+    def transform(self, T):
+        '''
+        **Input:**
+
+        - T: np.array of shape (4, 4)
+        
+        **Output:**
+
+        - GraspGroup instance after transformation, the original GraspGroup will also be changed.
+        '''
+        rotation = T[:3,:3]
+        translation = T[:3,3]
+        self.translations = np.dot(rotation, self.translations.reshape((3,-1))).reshape((-1,3)) + translation # (-1, 3)
+        self.rotation_matrices = np.matmul(rotation, self.rotation_matrices).reshape((-1, 3, 3)) # (-1, 9)
+        return self
 
     def add(self, element):
         '''
