@@ -434,7 +434,7 @@ class GraspNet():
         y2 = len(masky) - np.argmax(masky[::-1]) 
         return (x1, y1, x2, y2)
 
-    def loadScenePointCloud(self, sceneId, camera, annId, align=False, format = 'open3d', use_workspace = False, use_mask = True):
+    def loadScenePointCloud(self, sceneId, camera, annId, align=False, format = 'open3d', use_workspace = False, use_mask = True, use_inpainting = False):
         '''
         **Input:**
 
@@ -453,6 +453,8 @@ class GraspNet():
         - use_mask: bool of whether crop the point cloud use mask(z>0), only open3d 0.9.0 is supported for False option.
                     Only turn to False if you know what you are doing.
 
+        - use_inpainting: bool of whether inpaint the depth image for the missing information.
+
         **Output:**
 
         - open3d.geometry.PointCloud instance of the scene point cloud.
@@ -461,6 +463,11 @@ class GraspNet():
         '''
         colors = self.loadRGB(sceneId = sceneId, camera = camera, annId = annId).astype(np.float32) / 255.0
         depths = self.loadDepth(sceneId = sceneId, camera = camera, annId = annId)
+        if use_inpainting:
+            fault_mask = depths < 200
+            depths[fault_mask] = 0
+            inpainting_mask = (np.abs(depths) < 10).astype(np.uint8)
+            depths = cv2.inpaint(depths, inpainting_mask, 5, cv2.INPAINT_NS)
         intrinsics = np.load(os.path.join(self.root, 'scenes', 'scene_%04d' % sceneId, camera, 'camK.npy'))
         fx, fy = intrinsics[0,0], intrinsics[1,1]
         cx, cy = intrinsics[0,2], intrinsics[1,2]

@@ -5,7 +5,7 @@ import os
 
 setup(
     name='graspnetAPI',
-    version='1.2.6',
+    version='1.2.7',
     description='graspnet API',
     author='Hao-Shu Fang, Chenxi Wang, Minghao Gou',
     author_email='gouminghao@gmail.com',
