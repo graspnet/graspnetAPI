@@ -76,4 +76,8 @@ Please cite these papers in your publications if it helps your research:
 
 #### 1.2.6
 
-- Add transformation for Grasp and GraspGroup
+- Add transformation for Grasp and GraspGroup.
+
+#### 1.2.7
+
+- Add inpainting for depth image.
