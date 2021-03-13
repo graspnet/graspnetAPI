@@ -485,7 +485,9 @@ class GraspNet():
         points_z = depths / s
         points_x = (xmap - cx) / fx * points_z
         points_y = (ymap - cy) / fy * points_z
-
+        # print(f'points_x.shape:{points_x.shape}')
+        # print(f'points_y.shape:{points_y.shape}')
+        # print(f'points_z.shape:{points_z.shape}')
         if use_workspace:
             (x1, y1, x2, y2) = self.loadWorkSpace(sceneId, camera, annId)
             points_z = points_z[y1:y2,x1:x2]
@@ -495,9 +497,13 @@ class GraspNet():
 
         mask = (points_z > 0)
         points = np.stack([points_x, points_y, points_z], axis=-1)
+        # print(f'points.shape:{points.shape}')
         if use_mask:
             points = points[mask]
             colors = colors[mask]
+        else:
+            points = points.reshape((-1, 3))
+            colors = colors.reshape((-1, 3))
         if align:
             points = transform_points(points, camera_pose)
         if format == 'open3d':
