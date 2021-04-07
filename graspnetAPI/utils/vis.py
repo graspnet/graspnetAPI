@@ -158,8 +158,6 @@ def visAnno(dataset_root, scene_name, anno_idx, camera, num_grasp=10, th=0.3, al
             if not os.path.exists(save_folder):
                 os.mkdir(save_folder)
             vis.capture_screen_image(filename, do_render=True)
-            if show:
-                o3d.visualization.draw_geometries([point_cloud, *grippers])
             
             for gripper in grippers:
                 vis.remove_geometry(gripper)
@@ -231,8 +229,6 @@ def vis6D(dataset_root, scene_name, anno_idx, camera, align_to_table=True, save_
             filename = os.path.join(save_folder, '{}_{}_6d_{}.png'.format(scene_name, camera, i))
             vis.capture_screen_image(filename, do_render=True)
             vis.remove_geometry(model)
-            if show:
-                o3d.visualization.draw_geometries([point_cloud, model])
     else:
         for model in model_list:
             vis.add_geometry(model)
