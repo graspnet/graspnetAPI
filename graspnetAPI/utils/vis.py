@@ -7,6 +7,21 @@ from .utils import generate_scene_model, generate_scene_pointcloud, generate_vie
 from .rotation import viewpoint_params_to_matrix, batch_viewpoint_params_to_matrix
 
 def create_table_cloud(width, height, depth, dx=0, dy=0, dz=0, grid_size=0.01):
+    '''
+    Author: chenxi-wang
+    
+    **Input:**
+
+    - width/height/depth: float, table width/height/depth along x/z/y-axis in meters
+
+    - dx/dy/dz: float, offset along x/y/z-axis in meters
+
+    - grid_size: float, point distance along x/y/z-axis in meters
+
+    **Output:**
+
+    - open3d.geometry.PointCloud
+    '''
     xmap = np.linspace(0, width, int(width/grid_size))
     ymap = np.linspace(0, depth, int(depth/grid_size))
     zmap = np.linspace(0, height, int(height/grid_size))
@@ -43,7 +58,34 @@ def get_camera_parameters(camera='kinect'):
         param.intrinsic.set_intrinsics(1280,720,927.17,927.37,639.5,359.5)
     return param
 
-def visAnno(dataset_root, scene_name, anno_idx, camera, num_grasp=10, th=0.3, align_to_table=True, max_width=0.08, save_folder='save_fig', show=False):
+def visAnno(dataset_root, scene_name, anno_idx, camera, num_grasp=10, th=0.3, align_to_table=True, max_width=0.08, save_folder='save_fig', show=False, per_obj=False):
+    '''
+    Author: chenxi-wang
+    
+    **Input:**
+
+    - dataset_root: str, graspnet dataset root
+
+    - scene_name: str, name of scene folder, e.g. scene_0000
+
+    - anno_idx: int, frame index from 0-255
+
+    - camera: str, camera name (realsense or kinect)
+
+    - num_grasp: int, number of sampled grasps
+
+    - th: float, threshold of friction coefficient
+
+    - align_to_table: bool, transform to table coordinates if set to True
+
+    - max_width: float, only visualize grasps with width<=max_width
+
+    - save_folder: str, folder to save screen captures
+
+    - show: bool, show visualization in open3d window if set to True
+
+    - per_obj: bool, show grasps on each object
+    '''
     model_list, obj_list, pose_list = generate_scene_model(dataset_root, scene_name, anno_idx, return_poses=True, align=align_to_table, camera=camera)
     point_cloud = generate_scene_pointcloud(dataset_root, scene_name, anno_idx, align=align_to_table, camera=camera)
 
@@ -62,6 +104,7 @@ def visAnno(dataset_root, scene_name, anno_idx, camera, num_grasp=10, th=0.3, al
         param.extrinsic = np.linalg.inv(cam_pos).tolist()
 
     grippers = []
+    vis.add_geometry(point_cloud)
     for i, (obj_idx, trans) in enumerate(zip(obj_list, pose_list)):
         sampled_points, offsets, scores, _ = get_model_grasps('%s/grasp_label/%03d_labels.npz'%(dataset_root, obj_idx))
         collision = collision_label['arr_{}'.format(i)]
@@ -106,32 +149,66 @@ def visAnno(dataset_root, scene_name, anno_idx, camera, num_grasp=10, th=0.3, al
             if cnt == num_grasp:
                 break
 
-    vis.add_geometry(point_cloud)
-    for gripper in grippers:
-        vis.add_geometry(gripper)
-    ctr.convert_from_pinhole_camera_parameters(param)
-    vis.poll_events()
-    filename = os.path.join(save_folder, '{}_{}_pointcloud.png'.format(scene_name, camera))
-    if not os.path.exists(save_folder):
-        os.mkdir(save_folder)
-    vis.capture_screen_image(filename, do_render=True)
-    if show:
-        o3d.visualization.draw_geometries([point_cloud, *grippers])
+        if per_obj:
+            for gripper in grippers:
+                vis.add_geometry(gripper)
+            ctr.convert_from_pinhole_camera_parameters(param)
+            vis.poll_events()
+            filename = os.path.join(save_folder, '{}_{}_pointcloud_{}.png'.format(scene_name, camera, obj_idx))
+            if not os.path.exists(save_folder):
+                os.mkdir(save_folder)
+            vis.capture_screen_image(filename, do_render=True)
+            if show:
+                o3d.visualization.draw_geometries([point_cloud, *grippers])
+            
+            for gripper in grippers:
+                vis.remove_geometry(gripper)
+            grippers = []
+
+    if not per_obj:
+        for gripper in grippers:
+            vis.add_geometry(gripper)
+        ctr.convert_from_pinhole_camera_parameters(param)
+        vis.poll_events()
+        filename = os.path.join(save_folder, '{}_{}_pointcloud.png'.format(scene_name, camera))
+        if not os.path.exists(save_folder):
+            os.mkdir(save_folder)
+        vis.capture_screen_image(filename, do_render=True)
+        if show:
+            o3d.visualization.draw_geometries([point_cloud, *grippers])
+
+        vis.remove_geometry(point_cloud)
+        vis.add_geometry(table)
+        for model in model_list:
+            vis.add_geometry(model)
+        ctr.convert_from_pinhole_camera_parameters(param)
+        vis.poll_events()
+        filename = os.path.join(save_folder, '{}_{}_model.png'.format(scene_name, camera))
+        vis.capture_screen_image(filename, do_render=True)
+        if show:
+            o3d.visualization.draw_geometries([table, *model_list, *grippers])
 
 
-    vis.remove_geometry(point_cloud)
-    vis.add_geometry(table)
-    for model in model_list:
-        vis.add_geometry(model)
-    ctr.convert_from_pinhole_camera_parameters(param)
-    vis.poll_events()
-    filename = os.path.join(save_folder, '{}_{}_model.png'.format(scene_name, camera))
-    vis.capture_screen_image(filename, do_render=True)
-    if show:
-        o3d.visualization.draw_geometries([table, *model_list, *grippers])
+def vis6D(dataset_root, scene_name, anno_idx, camera, align_to_table=True, save_folder='save_fig', show=False, per_obj=False):
+    '''
+    **Input:**
 
+    - dataset_root: str, graspnet dataset root
 
-def vis6D(dataset_root, scene_name, anno_idx, camera, align_to_table=True, save_folder='save_fig', show=False):
+    - scene_name: str, name of scene folder, e.g. scene_0000
+
+    - anno_idx: int, frame index from 0-255
+
+    - camera: str, camera name (realsense or kinect)
+
+    - align_to_table: bool, transform to table coordinates if set to True
+
+    - save_folder: str, folder to save screen captures
+
+    - show: bool, show visualization in open3d window if set to True
+
+    - per_obj: bool, show pose of each object
+    '''
     model_list, obj_list, pose_list = generate_scene_model(dataset_root, scene_name, anno_idx, return_poses=True, align=align_to_table, camera=camera)
     point_cloud = generate_scene_pointcloud(dataset_root, scene_name, anno_idx, align=align_to_table, camera=camera)
     point_cloud = point_cloud.voxel_down_sample(voxel_size=0.005)
@@ -146,18 +223,46 @@ def vis6D(dataset_root, scene_name, anno_idx, camera, align_to_table=True, save_
         param.extrinsic = np.linalg.inv(cam_pos).tolist()
 
     vis.add_geometry(point_cloud)
-    for model in model_list:
-        vis.add_geometry(model)
-    ctr.convert_from_pinhole_camera_parameters(param)
-    vis.poll_events()
-    filename = os.path.join(save_folder, '{}_{}_6d.png'.format(scene_name, camera))
-    vis.capture_screen_image(filename, do_render=True)
-    if show:
-        o3d.visualization.draw_geometries([point_cloud, *model_list])
+    if per_obj:
+        for i,model in zip(obj_list,model_list):
+            vis.add_geometry(model)
+            ctr.convert_from_pinhole_camera_parameters(param)
+            vis.poll_events()
+            filename = os.path.join(save_folder, '{}_{}_6d_{}.png'.format(scene_name, camera, i))
+            vis.capture_screen_image(filename, do_render=True)
+            vis.remove_geometry(model)
+            if show:
+                o3d.visualization.draw_geometries([point_cloud, model])
+    else:
+        for model in model_list:
+            vis.add_geometry(model)
+        ctr.convert_from_pinhole_camera_parameters(param)
+        vis.poll_events()
+        filename = os.path.join(save_folder, '{}_{}_6d.png'.format(scene_name, camera))
+        vis.capture_screen_image(filename, do_render=True)
+        if show:
+            o3d.visualization.draw_geometries([point_cloud, *model_list])
 
 
 
 def visObjGrasp(dataset_root, obj_idx, num_grasp=10, th=0.5, save_folder='save_fig', show=False):
+    '''
+    Author: chenxi-wang
+    
+    **Input:**
+
+    - dataset_root: str, graspnet dataset root
+
+    - obj_idx: int, index of object model
+
+    - num_grasp: int, number of sampled grasps
+
+    - th: float, threshold of friction coefficient
+
+    - save_folder: str, folder to save screen captures
+
+    - show: bool, show visualization in open3d window if set to True
+    '''
     plyfile = os.path.join(dataset_root, 'models', '%03d'%obj_idx, 'nontextured.ply')
     model = o3d.io.read_point_cloud(plyfile)
 

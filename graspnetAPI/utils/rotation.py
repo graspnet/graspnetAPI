@@ -1,3 +1,7 @@
+""" Author: chenxi-wang
+    Transformation matrices from/to viewpoints and dexnet gripper params.
+"""
+
 import numpy as np
 from math import pi
 

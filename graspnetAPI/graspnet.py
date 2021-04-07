@@ -752,7 +752,7 @@ class GraspNet():
 
         - numGrasp: int of the displayed grasp number, grasps will be randomly sampled.
 
-        - coef_fric_thresh: float of the friction coefficient of grasps. 
+        - coef_fric_thresh: float of the friction coefficient of grasps.
         '''
         if format == '6d':
             geometries = []
@@ -774,7 +774,7 @@ class GraspNet():
             cv2.waitKey(0)
             cv2.destroyAllWindows()
 
-    def show6DPose(self, sceneIds, saveFolder='save_fig', show=False):
+    def show6DPose(self, sceneIds, saveFolder='save_fig', show=False, perObj=False):
         '''
         **Input:**
 
@@ -783,6 +783,8 @@ class GraspNet():
         - saveFolder: string of the folder to store the image.
 
         - show: bool of whether to show the image.
+
+        - perObj: bool, show grasps on each object
 
         **Output:**
         
@@ -798,4 +800,4 @@ class GraspNet():
         for scene_id in sceneIds:
             scene_name = 'scene_'+str(scene_id).zfill(4)
             vis6D(self.root, scene_name, 0, self.camera,
-                  align_to_table=True, save_folder=saveFolder, show=show)
+                  align_to_table=True, save_folder=saveFolder, show=show, per_obj=perObj)
