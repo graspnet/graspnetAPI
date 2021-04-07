@@ -241,7 +241,7 @@ def vis6D(dataset_root, scene_name, anno_idx, camera, align_to_table=True, save_
 
 
 
-def visObjGrasp(dataset_root, obj_idx, num_grasp=10, th=0.5, save_folder='save_fig', show=False):
+def visObjGrasp(dataset_root, obj_idx, num_grasp=10, th=0.5, max_width=0.08, save_folder='save_fig', show=False):
     '''
     Author: chenxi-wang
     
@@ -254,6 +254,8 @@ def visObjGrasp(dataset_root, obj_idx, num_grasp=10, th=0.5, save_folder='save_f
     - num_grasp: int, number of sampled grasps
 
     - th: float, threshold of friction coefficient
+
+    - max_width: float, only visualize grasps with width<=max_width
 
     - save_folder: str, folder to save screen captures
 
@@ -299,7 +301,7 @@ def visObjGrasp(dataset_root, obj_idx, num_grasp=10, th=0.5, save_folder='save_f
                 for d in depth_inds:
                     if flag: break
                     angle, depth, width = offset[v, a, d]
-                    if score[v, a, d] > th or score[v, a, d] < 0:
+                    if score[v, a, d] > th or score[v, a, d] < 0 or width > max_width:
                         continue
                     R = viewpoint_params_to_matrix(-view, angle)
                     t = target_point

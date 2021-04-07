@@ -709,7 +709,7 @@ class GraspNet():
             scene_name = 'scene_'+str(sceneId).zfill(4)
             return (rgbPath, depthPath, segLabelPath, metaPath, rectLabelPath, scene_name,annId)
 
-    def showObjGrasp(self, objIds=[], numGrasp=10, th=0.5, saveFolder='save_fig', show=False):
+    def showObjGrasp(self, objIds=[], numGrasp=10, th=0.5, maxWidth=0.08, saveFolder='save_fig', show=False):
         '''
         **Input:**
 
@@ -718,6 +718,8 @@ class GraspNet():
         - numGrasp: how many grasps to show in the image.
 
         - th: threshold of the coefficient of friction.
+
+        - maxWidth: float, only visualize grasps with width<=maxWidth
 
         - saveFolder: string of the path to save the rendered image.
 
@@ -736,7 +738,7 @@ class GraspNet():
         if not os.path.exists(saveFolder):
             os.mkdir(saveFolder)
         for obj_id in objIds:
-            visObjGrasp(self.root, obj_id, num_grasp=numGrasp,th=th, save_folder=saveFolder, show=show)
+            visObjGrasp(self.root, obj_id, num_grasp=numGrasp, th=th, max_width=maxWidth, save_folder=saveFolder, show=show)
 
     def showSceneGrasp(self, sceneId, camera = 'kinect', annId = 0, format = '6d', numGrasp = 20, show_object = True, coef_fric_thresh = 0.1):
         '''
