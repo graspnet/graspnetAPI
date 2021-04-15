@@ -12,7 +12,8 @@ sphinx:
 # Build documentation with MkDocs
 #mkdocs:
 #  configuration: mkdocs.yml
-
+build:
+  image: stable
 # Optionally build your docs in additional formats such as PDF
 formats:
   - pdf
