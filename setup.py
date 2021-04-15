@@ -33,5 +33,6 @@ setup(
         'sklearn',
         'grasp_nms',
         'torch',
+        'addict',
     ]
 )
