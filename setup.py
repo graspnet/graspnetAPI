@@ -34,5 +34,6 @@ setup(
         'grasp_nms',
         'torch',
         'addict',
+        'plyfile',
     ]
 )
