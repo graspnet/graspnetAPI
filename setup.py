@@ -31,6 +31,7 @@ setup(
         'dill',
         'h5py',
         'sklearn',
-        'grasp_nms'
+        'grasp_nms',
+        'torch',
     ]
 )
