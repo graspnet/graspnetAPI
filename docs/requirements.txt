@@ -1,4 +1,4 @@
 sphinx==3.0.3
 sphinx_rtd_theme
 open3d==0.11.0
--e ..
+-e .
