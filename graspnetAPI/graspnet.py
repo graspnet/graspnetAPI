@@ -485,7 +485,9 @@ class GraspNet():
         points_z = depths / s
         points_x = (xmap - cx) / fx * points_z
         points_y = (ymap - cy) / fy * points_z
-
+        # print(f'points_x.shape:{points_x.shape}')
+        # print(f'points_y.shape:{points_y.shape}')
+        # print(f'points_z.shape:{points_z.shape}')
         if use_workspace:
             (x1, y1, x2, y2) = self.loadWorkSpace(sceneId, camera, annId)
             points_z = points_z[y1:y2,x1:x2]
@@ -495,9 +497,13 @@ class GraspNet():
 
         mask = (points_z > 0)
         points = np.stack([points_x, points_y, points_z], axis=-1)
+        # print(f'points.shape:{points.shape}')
         if use_mask:
             points = points[mask]
             colors = colors[mask]
+        else:
+            points = points.reshape((-1, 3))
+            colors = colors.reshape((-1, 3))
         if align:
             points = transform_points(points, camera_pose)
         if format == 'open3d':
@@ -703,7 +709,7 @@ class GraspNet():
             scene_name = 'scene_'+str(sceneId).zfill(4)
             return (rgbPath, depthPath, segLabelPath, metaPath, rectLabelPath, scene_name,annId)
 
-    def showObjGrasp(self, objIds=[], numGrasp=10, th=0.5, saveFolder='save_fig', show=False):
+    def showObjGrasp(self, objIds=[], numGrasp=10, th=0.5, maxWidth=0.08, saveFolder='save_fig', show=False):
         '''
         **Input:**
 
@@ -712,6 +718,8 @@ class GraspNet():
         - numGrasp: how many grasps to show in the image.
 
         - th: threshold of the coefficient of friction.
+
+        - maxWidth: float, only visualize grasps with width<=maxWidth
 
         - saveFolder: string of the path to save the rendered image.
 
@@ -730,7 +738,7 @@ class GraspNet():
         if not os.path.exists(saveFolder):
             os.mkdir(saveFolder)
         for obj_id in objIds:
-            visObjGrasp(self.root, obj_id, num_grasp=numGrasp,th=th, save_folder=saveFolder, show=show)
+            visObjGrasp(self.root, obj_id, num_grasp=numGrasp, th=th, max_width=maxWidth, save_folder=saveFolder, show=show)
 
     def showSceneGrasp(self, sceneId, camera = 'kinect', annId = 0, format = '6d', numGrasp = 20, show_object = True, coef_fric_thresh = 0.1):
         '''
@@ -746,7 +754,7 @@ class GraspNet():
 
         - numGrasp: int of the displayed grasp number, grasps will be randomly sampled.
 
-        - coef_fric_thresh: float of the friction coefficient of grasps. 
+        - coef_fric_thresh: float of the friction coefficient of grasps.
         '''
         if format == '6d':
             geometries = []
@@ -768,7 +776,7 @@ class GraspNet():
             cv2.waitKey(0)
             cv2.destroyAllWindows()
 
-    def show6DPose(self, sceneIds, saveFolder='save_fig', show=False):
+    def show6DPose(self, sceneIds, saveFolder='save_fig', show=False, perObj=False):
         '''
         **Input:**
 
@@ -777,6 +785,8 @@ class GraspNet():
         - saveFolder: string of the folder to store the image.
 
         - show: bool of whether to show the image.
+
+        - perObj: bool, show grasps on each object
 
         **Output:**
         
@@ -792,4 +802,4 @@ class GraspNet():
         for scene_id in sceneIds:
             scene_name = 'scene_'+str(scene_id).zfill(4)
             vis6D(self.root, scene_name, 0, self.camera,
-                  align_to_table=True, save_folder=saveFolder, show=show)
+                  align_to_table=True, save_folder=saveFolder, show=show, per_obj=perObj)
