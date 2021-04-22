@@ -408,7 +408,7 @@ class GraspGroup():
         '''
         rotation = T[:3,:3]
         translation = T[:3,3]
-        self.translations = np.dot(rotation, self.translations.reshape((3,-1))).reshape((-1,3)) + translation # (-1, 3)
+        self.translations = np.dot(rotation, self.translations.T).T + translation # (-1, 3)
         self.rotation_matrices = np.matmul(rotation, self.rotation_matrices).reshape((-1, 3, 3)) # (-1, 9)
         return self
 
