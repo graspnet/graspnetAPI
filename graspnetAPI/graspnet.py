@@ -658,17 +658,9 @@ class GraspNet():
                 grasp_group.grasp_group_array = np.concatenate((grasp_group.grasp_group_array, obj_grasp_array))
             return grasp_group
         else:
-            import copy
             # 'rect'
-            # for rectangle grasp, collision labels and grasp labels are not necessray. 
-            ##################### OLD LABEL ################
-            ############### MODIFICATION NEEDED ############
-            rect_grasp_label = np.load(os.path.join(self.root,'scenes','scene_%04d' % sceneId,camera,'rect','%04d.npy' % annId))
-            mask = rect_grasp_label[:,5] >= (1.1 - fric_coef_thresh)
-            rect_grasp_label = rect_grasp_label[mask]
-            rect_grasp = RectGraspGroup()
-            rect_grasp.rect_grasp_group_array = copy.deepcopy(rect_grasp_label)
-            return rect_grasp
+            rect_grasps = RectGraspGroup(os.path.join(self.root,'scenes','scene_%04d' % sceneId,camera,'rect','%04d.npy' % annId))
+            return rect_grasps
 
     def loadData(self, ids=None, *extargs):
         '''
