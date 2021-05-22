@@ -450,7 +450,7 @@ def plot_axis(R,center,length,grid_size = 0.01):
     cloud.points = o3d.utility.Vector3dVector(p)
     return cloud
 
-def plot_gripper_pro_max(center, R, width, depth, score=1):
+def plot_gripper_pro_max(center, R, width, depth, score=1, color=None):
     '''
     Author: chenxi-wang
     
@@ -474,9 +474,13 @@ def plot_gripper_pro_max(center, R, width, depth, score=1):
     tail_length = 0.04
     depth_base = 0.02
     
-    color_r = score # red for high score
-    color_b = 1 - score # blue for low score
-    color_g = 0
+    if color is not None:
+        color_r, color_g, color_b = color
+    else:
+        color_r = score # red for high score
+        color_g = 0
+        color_b = 1 - score # blue for low score
+    
     left = create_mesh_box(depth+depth_base+finger_width, finger_width, height)
     right = create_mesh_box(depth+depth_base+finger_width, finger_width, height)
     bottom = create_mesh_box(finger_width, width, height)
