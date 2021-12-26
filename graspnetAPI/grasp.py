@@ -190,13 +190,17 @@ class Grasp():
         self.rotation_matrix = np.dot(rotation, self.rotation_matrix)
         return self
 
-    def to_open3d_geometry(self):
+    def to_open3d_geometry(self, color=None):
         '''
+        **Input:**
+
+        - color: optional, tuple of shape (3) denotes (r, g, b), e.g., (1,0,0) for red
+
         **Ouput:**
 
         - list of open3d.geometry.Geometry of the gripper.
         '''
-        return plot_gripper_pro_max(self.translation, self.rotation_matrix, self.width, self.depth, score = self.score)
+        return plot_gripper_pro_max(self.translation, self.rotation_matrix, self.width, self.depth, score = self.score, color = color)
 
 class GraspGroup():
     def __init__(self, *args):
@@ -384,7 +388,7 @@ class GraspGroup():
 
         - numpy array of shape (-1, ) of the object ids.
         '''
-        return self.grasp_group_array[:,16].astype(np.int32)
+        return self.grasp_group_array[:,16]
 
     @object_ids.setter
     def object_ids(self, object_ids):
