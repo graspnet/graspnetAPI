@@ -15,7 +15,7 @@ setup(
         'numpy',
         'scipy',
         'transforms3d==0.3.1',
-        'open3d==0.11.0',
+        'open3d>=0.8.0.0',
         'trimesh',
         'tqdm',
         'Pillow',
@@ -31,9 +31,6 @@ setup(
         'dill',
         'h5py',
         'sklearn',
-        'grasp_nms',
-        'torch',
-        'addict',
-        'plyfile',
+        'grasp_nms'
     ]
 )
