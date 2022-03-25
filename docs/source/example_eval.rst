@@ -20,7 +20,7 @@ To generate a `GraspGroup` and save it, you can directly input a 2D numpy array 
                 ))
   gg.save_npy(save_path)
 
-where your algorithm predicts N grasp poses for an image. For the meaning of each entry, you should refer to the doc for Grasp Label Format-API Loaded Labels
+where your algorithm predicts N grasp poses for an image. For the `object_id`, you can simply input `0`. For the meaning of other entries, you should refer to the doc for Grasp Label Format-API Loaded Labels
 
 The file structure of dump folder should be as follows:
 
