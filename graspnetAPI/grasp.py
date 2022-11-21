@@ -129,11 +129,7 @@ class Grasp():
         - len(args) == 9: float of matrix
         '''
         if len(args) == 1:
-<<<<<<< HEAD
-            self.grasp_array[4:13] = np.array(args[0],dtype = np.float64)
-=======
             self.grasp_array[4:13] = np.array(args[0],dtype = np.float64).reshape(9)
->>>>>>> master
         elif len(args) == 9:
             self.grasp_array[4:13] = np.array(args,dtype = np.float64)
 
@@ -172,21 +168,13 @@ class Grasp():
     @object_id.setter
     def object_id(self, object_id):
         '''
-<<<<<<< HEAD
-        **input:**
-=======
         **Input:**
->>>>>>> master
 
         - int of the object_id.
         '''
         self.grasp_array[16] = object_id
 
-<<<<<<< HEAD
-    def to_open3d_geometry(self):
-=======
     def transform(self, T):
->>>>>>> master
         '''
         **Input:**
 
@@ -212,11 +200,7 @@ class Grasp():
 
         - list of open3d.geometry.Geometry of the gripper.
         '''
-<<<<<<< HEAD
-        return plot_gripper_pro_max(self.translation, self.rotation_matrix, self.width, self.depth, score = self.score)
-=======
         return plot_gripper_pro_max(self.translation, self.rotation_matrix, self.width, self.depth, score = self.score, color = color)
->>>>>>> master
 
 class GraspGroup():
     def __init__(self, *args):
@@ -432,16 +416,6 @@ class GraspGroup():
         self.rotation_matrices = np.matmul(rotation, self.rotation_matrices).reshape((-1, 3, 3)) # (-1, 9)
         return self
 
-    @object_ids.setter
-    def object_ids(self, object_ids):
-        '''
-        **Input:**
-
-        - object_ids: numpy array of shape (-1, ) of the object_ids.
-        '''
-        assert object_ids.size == len(self)
-        self.grasp_group_array[:,16] = copy.deepcopy(object_ids)
-
     def add(self, element):
         '''
         **Input:**
@@ -617,19 +591,11 @@ class RectGrasp():
     def score(self, score):
         '''
         **input:**
-<<<<<<< HEAD
 
         - float of the score.
         '''
         self.rect_grasp_array[5] = score
 
-=======
-
-        - float of the score.
-        '''
-        self.rect_grasp_array[5] = score
-
->>>>>>> master
     @property
     def height(self):
         '''

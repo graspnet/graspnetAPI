@@ -5,14 +5,6 @@
 
 Visit the [GraspNet Website](http://graspnet.net) to get the dataset.
 
-## Dataset
-
-Visit the [GraspNet Website](http://graspnet.net) to get the dataset.
-
-## Document
-
-Refer to [document](http://graspnet.net/docs/index.html) for more details.
-
 ## Install
 You can install using pip.
 ```bash

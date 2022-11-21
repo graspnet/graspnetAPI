@@ -20,17 +20,9 @@ from .dexnet.grasping.meshpy.sdf_file import SdfFile
 def get_scene_name(num):
     '''
     **Input:**
-<<<<<<< HEAD
-
     - num: int of the scene number.
     
     **Output:**
-
-=======
-    - num: int of the scene number.
-    
-    **Output:**
->>>>>>> master
     - string of the scene name.
     '''
     return ('scene_%04d' % (num,))
@@ -38,22 +30,10 @@ def get_scene_name(num):
 def create_table_points(lx, ly, lz, dx=0, dy=0, dz=0, grid_size=0.01):
     '''
     **Input:**
-<<<<<<< HEAD
-
-    - lx:
-
-    - ly:
-
-    - lz:
-
-    **Output:**
-
-=======
     - lx:
     - ly:
     - lz:
     **Output:**
->>>>>>> master
     - numpy array of the points with shape (-1, 3).
     '''
     xmap = np.linspace(0, lx, int(lx/grid_size))
@@ -70,19 +50,9 @@ def create_table_points(lx, ly, lz, dx=0, dy=0, dz=0, grid_size=0.01):
 def parse_posevector(posevector):
     '''
     **Input:**
-<<<<<<< HEAD
-
-    - posevector: list of pose
-
-    **Output:**
-
-    - obj_idx: int of the index of object.
-
-=======
     - posevector: list of pose
     **Output:**
     - obj_idx: int of the index of object.
->>>>>>> master
     - mat: numpy array of shape (4, 4) of the 6D pose of object.
     '''
     mat = np.zeros([4,4],dtype=np.float32)
@@ -103,10 +73,6 @@ def load_dexnet_model(data_path):
     - data_path: path to load .obj & .sdf files
     
     **Output:**
-<<<<<<< HEAD
-
-=======
->>>>>>> master
     - obj: dexnet model
     '''
     of = ObjFile('{}.obj'.format(data_path))
@@ -125,10 +91,6 @@ def transform_points(points, trans):
     - trans: (4, 4)
     
     **Output:**
-<<<<<<< HEAD
-
-=======
->>>>>>> master
     - points_trans: (N, 3)
     '''
     ones = np.ones([points.shape[0],1], dtype=points.dtype)
@@ -140,19 +102,11 @@ def transform_points(points, trans):
 def compute_point_distance(A, B):
     '''
     **Input:**
-<<<<<<< HEAD
-
-=======
->>>>>>> master
     - A: (N, 3)
     
     - B: (M, 3)
     
     **Output:**
-<<<<<<< HEAD
-
-=======
->>>>>>> master
     - dists: (N, M)
     '''
     A = A[:, np.newaxis, :]
@@ -232,46 +186,29 @@ def collision_detection(grasp_list, model_list, dexnet_models, poses, scene_poin
     '''
     **Input:**
     
-<<<<<<< HEAD
-    - grasp_list: [(k1,17), (k2,17), ..., (kn,17)] in camera coordinate
-    
-    - model_list: [(N1, 3), (N2, 3), ..., (Nn, 3)] in camera coordinate
-    
-    - dexnet_models: [GraspableObject3D,] in model coordinate
-=======
     - grasp_list: [(k1, 17), (k2, 17), ..., (kn, 17)] in camera coordinate
     
     - model_list: [(N1, 3), (N2, 3), ..., (Nn, 3)] in camera coordinate
     
     - dexnet_models: [GraspableObject3D,] in object coordinate
->>>>>>> master
     
     - poses: [(4, 4),] from model coordinate to camera coordinate
     
     - scene_points: (Ns, 3) in camera coordinate
     
-<<<<<<< HEAD
-    - empty_thresh: int, 'num_inner_points < empty_thresh' means empty grasp
-=======
     - outlier: float, used to compute workspace mask
     
     - empty_thresh: int, 'num_inner_points < empty_thresh' means empty grasp
 
     - return_dexgrasps: bool, return grasps in dex-net format while True
->>>>>>> master
     
     **Output:**
     
     - collsion_mask_list: [(k1,), (k2,), ..., (kn,)]
-<<<<<<< HEAD
-    
-    - contact_list: [[[ParallelJawPtGrasp3D, Contact3D, Contact3D],],]in model coordinate
-=======
 
     - empty_mask_list: [(k1,), (k2,), ..., (kn,)]
     
     - dexgrasp_list: [[ParallelJawPtGrasp3D,],] in object coordinate
->>>>>>> master
     '''
     height = 0.02
     depth_base = 0.02
@@ -363,13 +300,6 @@ def eval_grasp(grasp_group, models, dexnet_models, poses, config, table=None, vo
     '''
     **Input:**
     
-<<<<<<< HEAD
-    - models: in model coordinate
-    
-    - poses: from model to camera coordinate
-    
-    - table: in camera coordinate
-=======
     - grasp_group: GraspGroup instance for evaluation.
 
     - models: in model coordinate
@@ -385,7 +315,6 @@ def eval_grasp(grasp_group, models, dexnet_models, poses, config, table=None, vo
     - voxel_size: float of the voxel size.
 
     - TOP_K: int of the number of top grasps to evaluate.
->>>>>>> master
     '''
     num_models = len(models)
     ## grasp nms

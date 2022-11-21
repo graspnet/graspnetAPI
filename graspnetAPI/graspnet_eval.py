@@ -91,11 +91,7 @@ class GraspNetEval(GraspNet):
             pose_list.append(mat)
         return obj_list, pose_list, camera_pose, align_mat
         
-<<<<<<< HEAD
-    def eval_scene(self, scene_id, dump_folder, return_list = False,vis = False):
-=======
     def eval_scene(self, scene_id, dump_folder, TOP_K = 50, return_list = False,vis = False, max_width = 0.1):
->>>>>>> master
         '''
         **Input:**
 
@@ -103,20 +99,14 @@ class GraspNetEval(GraspNet):
         
         - dump_folder: string of the folder that saves the dumped npy files.
 
-<<<<<<< HEAD
-=======
         - TOP_K: int of the top number of grasp to evaluate
 
->>>>>>> master
         - return_list: bool of whether to return the result list.
 
         - vis: bool of whether to show the result
 
-<<<<<<< HEAD
-=======
         - max_width: float of the maximum gripper width in evaluation
 
->>>>>>> master
         **Output:**
 
         - scene_accuracy: np.array of shape (256, 50, 6) of the accuracy tensor.
@@ -206,11 +196,7 @@ class GraspNetEval(GraspNet):
                     else:
                         grasp_accuracy[k,fric_idx] = np.sum(((score_list[0:k+1]<=fric) & (score_list[0:k+1]>0)).astype(int))/(k+1)
 
-<<<<<<< HEAD
-            print('\rMean Accuracy for scene:{} ann:{}='.format(scene_id, ann_id),np.mean(grasp_accuracy[:,:]), end='')
-=======
             print('\rMean Accuracy for scene:%04d ann:%04d = %.3f' % (scene_id, ann_id, 100.0 * np.mean(grasp_accuracy[:,:])), end='', flush=True)
->>>>>>> master
             scene_accuracy.append(grasp_accuracy)
         if not return_list:
             return scene_accuracy
@@ -260,44 +246,6 @@ class GraspNetEval(GraspNet):
         res = np.array(self.parallel_eval_scenes(scene_ids = list(range(100, 130)), dump_folder = dump_folder, proc = proc))
         ap = np.mean(res)
         print('\nEvaluation Result:\n----------\n{}, AP Seen={}'.format(self.camera, ap))
-        return res, ap
-
-    def eval_similar(self, dump_folder, proc = 2):
-        '''
-        **Input:**
-
-        - dump_folder: string of the folder that saves the npy files.
-
-        - proc: int of the number of processes to use to evaluate.
-
-        **Output:**
-
-        - res: numpy array of the detailed accuracy.
-
-        - ap: float of the AP for similar split.
-        '''
-        res = np.array(self.parallel_eval_scenes(scene_ids = list(range(130, 160)), dump_folder = dump_folder, proc = proc))
-        ap = np.mean(res)
-        print('\nEvaluation Result:\n----------\n{}, AP={}, AP Similar={}'.format(self.camera, ap, ap))
-        return res, ap
-
-    def eval_novel(self, dump_folder, proc = 2):
-        '''
-        **Input:**
-
-        - dump_folder: string of the folder that saves the npy files.
-
-        - proc: int of the number of processes to use to evaluate.
-
-        **Output:**
-
-        - res: numpy array of the detailed accuracy.
-
-        - ap: float of the AP for novel split.
-        '''
-        res = np.array(self.parallel_eval_scenes(scene_ids = list(range(160, 190)), dump_folder = dump_folder, proc = proc))
-        ap = np.mean(res)
-        print('\nEvaluation Result:\n----------\n{}, AP={}, AP Novel={}'.format(self.camera, ap, ap))
         return res, ap
 
     def eval_similar(self, dump_folder, proc = 2):

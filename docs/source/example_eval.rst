@@ -6,12 +6,6 @@ Evaluation
 Data Preparation
 ^^^^^^^^^^^^^^^^
 
-<<<<<<< HEAD
-The first step of evaluation is to prepare your own data.
-You need to run your code and generate a `GraspGroup` for each image in each scene.
-Then call the `save_npy` function of `GraspGroup` to dump the results.
-
-=======
 The first step of evaluation is to prepare your own results.
 You need to run your code and generate a `GraspGroup` for each image in each scene.
 Then call the `save_npy` function of `GraspGroup` to dump the results.
@@ -28,7 +22,6 @@ To generate a `GraspGroup` and save it, you can directly input a 2D numpy array 
 
 where your algorithm predicts N grasp poses for an image. For the `object_id`, you can simply input `0`. For the meaning of other entries, you should refer to the doc for Grasp Label Format-API Loaded Labels
 
->>>>>>> master
 The file structure of dump folder should be as follows:
 
 ::
@@ -49,11 +42,7 @@ The file structure of dump folder should be as follows:
         |
         --- scene_0189
 
-<<<<<<< HEAD
-You can only generate dump for one camera, there will be no error for doing that.
-=======
 You can choose to generate dump files for only one camera, there will be no error for doing that.
->>>>>>> master
 
 Evaluation API
 ^^^^^^^^^^^^^^

@@ -78,8 +78,6 @@ def generate_views(N, phi=(np.sqrt(5)-1)/2, center=np.zeros(3, dtype=np.float32)
     return views
 
 def generate_scene_model(dataset_root, scene_name, anno_idx, return_poses=False, align=False, camera='realsense'):
-<<<<<<< HEAD
-=======
     '''
     Author: chenxi-wang
 
@@ -101,7 +99,6 @@ def generate_scene_model(dataset_root, scene_name, anno_idx, return_poses=False,
 
     - list of open3d.geometry.PointCloud.
     '''
->>>>>>> master
     if align:
         camera_poses = np.load(os.path.join(dataset_root, 'scenes', scene_name, camera, 'camera_poses.npy'))
         camera_pose = camera_poses[anno_idx]

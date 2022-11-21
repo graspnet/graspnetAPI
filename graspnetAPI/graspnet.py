@@ -1,8 +1,4 @@
 __author__ = 'hsfang, mhgou, cxwang'
-<<<<<<< HEAD
-__version__ = '1.0'
-=======
->>>>>>> master
 
 # Interface for accessing the GraspNet-1Billion dataset.
 # Description and part of the codes modified from MSCOCO api
@@ -438,11 +434,7 @@ class GraspNet():
         y2 = len(masky) - np.argmax(masky[::-1]) 
         return (x1, y1, x2, y2)
 
-<<<<<<< HEAD
-    def loadScenePointCloud(self, sceneId, camera, annId, align=False, format='open3d', use_workspace=False):
-=======
     def loadScenePointCloud(self, sceneId, camera, annId, align=False, format = 'open3d', use_workspace = False, use_mask = True, use_inpainting = False):
->>>>>>> master
         '''
         **Input:**
 
@@ -458,13 +450,10 @@ class GraspNet():
 
         - use_workspace: bool of whether crop the point cloud in the work space.
 
-<<<<<<< HEAD
-=======
         - use_mask: bool of whether crop the point cloud use mask(z>0), only open3d 0.9.0 is supported for False option.
                     Only turn to False if you know what you are doing.
 
         - use_inpainting: bool of whether inpaint the depth image for the missing information.
->>>>>>> master
 
         **Output:**
 
@@ -474,14 +463,11 @@ class GraspNet():
         '''
         colors = self.loadRGB(sceneId = sceneId, camera = camera, annId = annId).astype(np.float32) / 255.0
         depths = self.loadDepth(sceneId = sceneId, camera = camera, annId = annId)
-<<<<<<< HEAD
-=======
         if use_inpainting:
             fault_mask = depths < 200
             depths[fault_mask] = 0
             inpainting_mask = (np.abs(depths) < 10).astype(np.uint8)
             depths = cv2.inpaint(depths, inpainting_mask, 5, cv2.INPAINT_NS)
->>>>>>> master
         intrinsics = np.load(os.path.join(self.root, 'scenes', 'scene_%04d' % sceneId, camera, 'camK.npy'))
         fx, fy = intrinsics[0,0], intrinsics[1,1]
         cx, cy = intrinsics[0,2], intrinsics[1,2]
@@ -499,13 +485,9 @@ class GraspNet():
         points_z = depths / s
         points_x = (xmap - cx) / fx * points_z
         points_y = (ymap - cy) / fy * points_z
-<<<<<<< HEAD
-
-=======
         # print(f'points_x.shape:{points_x.shape}')
         # print(f'points_y.shape:{points_y.shape}')
         # print(f'points_z.shape:{points_z.shape}')
->>>>>>> master
         if use_workspace:
             (x1, y1, x2, y2) = self.loadWorkSpace(sceneId, camera, annId)
             points_z = points_z[y1:y2,x1:x2]
@@ -515,10 +497,6 @@ class GraspNet():
 
         mask = (points_z > 0)
         points = np.stack([points_x, points_y, points_z], axis=-1)
-<<<<<<< HEAD
-        points = points[mask]
-        colors = colors[mask]
-=======
         # print(f'points.shape:{points.shape}')
         if use_mask:
             points = points[mask]
@@ -526,7 +504,6 @@ class GraspNet():
         else:
             points = points.reshape((-1, 3))
             colors = colors.reshape((-1, 3))
->>>>>>> master
         if align:
             points = transform_points(points, camera_pose)
         if format == 'open3d':
@@ -681,23 +658,9 @@ class GraspNet():
                 grasp_group.grasp_group_array = np.concatenate((grasp_group.grasp_group_array, obj_grasp_array))
             return grasp_group
         else:
-<<<<<<< HEAD
-            import copy
-            # 'rect'
-            # for rectangle grasp, collision labels and grasp labels are not necessray. 
-            ##################### OLD LABEL ################
-            ############### MODIFICATION NEEDED ############
-            rect_grasp_label = np.load(os.path.join(self.root,'scenes','scene_%04d' % sceneId,camera,'rect','%04d.npy' % annId))
-            mask = rect_grasp_label[:,5] >= (1.1 - fric_coef_thresh)
-            rect_grasp_label = rect_grasp_label[mask]
-            rect_grasp = RectGraspGroup()
-            rect_grasp.rect_grasp_group_array = copy.deepcopy(rect_grasp_label)
-            return rect_grasp
-=======
             # 'rect'
             rect_grasps = RectGraspGroup(os.path.join(self.root,'scenes','scene_%04d' % sceneId,camera,'rect','%04d.npy' % annId))
             return rect_grasps
->>>>>>> master
 
     def loadData(self, ids=None, *extargs):
         '''
@@ -738,11 +701,7 @@ class GraspNet():
             scene_name = 'scene_'+str(sceneId).zfill(4)
             return (rgbPath, depthPath, segLabelPath, metaPath, rectLabelPath, scene_name,annId)
 
-<<<<<<< HEAD
-    def showObjGrasp(self, objIds=[], numGrasp=10, th=0.5, saveFolder='save_fig', show=False):
-=======
     def showObjGrasp(self, objIds=[], numGrasp=10, th=0.5, maxWidth=0.08, saveFolder='save_fig', show=False):
->>>>>>> master
         '''
         **Input:**
 
@@ -752,11 +711,8 @@ class GraspNet():
 
         - th: threshold of the coefficient of friction.
 
-<<<<<<< HEAD
-=======
         - maxWidth: float, only visualize grasps with width<=maxWidth
 
->>>>>>> master
         - saveFolder: string of the path to save the rendered image.
 
         - show: bool of whether to show the image.
@@ -774,11 +730,7 @@ class GraspNet():
         if not os.path.exists(saveFolder):
             os.mkdir(saveFolder)
         for obj_id in objIds:
-<<<<<<< HEAD
-            visObjGrasp(self.root, obj_id, num_grasp=numGrasp,th=th, save_folder=saveFolder, show=show)
-=======
             visObjGrasp(self.root, obj_id, num_grasp=numGrasp, th=th, max_width=maxWidth, save_folder=saveFolder, show=show)
->>>>>>> master
 
     def showSceneGrasp(self, sceneId, camera = 'kinect', annId = 0, format = '6d', numGrasp = 20, show_object = True, coef_fric_thresh = 0.1):
         '''
@@ -794,11 +746,7 @@ class GraspNet():
 
         - numGrasp: int of the displayed grasp number, grasps will be randomly sampled.
 
-<<<<<<< HEAD
-        - coef_fric_thresh: float of the friction coefficient of grasps. 
-=======
         - coef_fric_thresh: float of the friction coefficient of grasps.
->>>>>>> master
         '''
         if format == '6d':
             geometries = []
@@ -820,11 +768,7 @@ class GraspNet():
             cv2.waitKey(0)
             cv2.destroyAllWindows()
 
-<<<<<<< HEAD
-    def show6DPose(self, sceneIds, saveFolder='save_fig', show=False):
-=======
     def show6DPose(self, sceneIds, saveFolder='save_fig', show=False, perObj=False):
->>>>>>> master
         '''
         **Input:**
 
@@ -834,11 +778,8 @@ class GraspNet():
 
         - show: bool of whether to show the image.
 
-<<<<<<< HEAD
-=======
         - perObj: bool, show grasps on each object
 
->>>>>>> master
         **Output:**
         
         - No output but to save the rendered image and maybe show the result.
@@ -853,8 +794,4 @@ class GraspNet():
         for scene_id in sceneIds:
             scene_name = 'scene_'+str(scene_id).zfill(4)
             vis6D(self.root, scene_name, 0, self.camera,
-<<<<<<< HEAD
-                  align_to_table=True, save_folder=saveFolder, show=show)
-=======
                   align_to_table=True, save_folder=saveFolder, show=show, per_obj=perObj)
->>>>>>> master
