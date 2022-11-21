@@ -1,5 +1,4 @@
 __author__ = 'mhgou'
-__version__ = '1.0'
 
 import numpy as np
 import open3d as o3d
@@ -130,7 +129,11 @@ class Grasp():
         - len(args) == 9: float of matrix
         '''
         if len(args) == 1:
+<<<<<<< HEAD
             self.grasp_array[4:13] = np.array(args[0],dtype = np.float64)
+=======
+            self.grasp_array[4:13] = np.array(args[0],dtype = np.float64).reshape(9)
+>>>>>>> master
         elif len(args) == 9:
             self.grasp_array[4:13] = np.array(args,dtype = np.float64)
 
@@ -169,19 +172,51 @@ class Grasp():
     @object_id.setter
     def object_id(self, object_id):
         '''
+<<<<<<< HEAD
         **input:**
+=======
+        **Input:**
+>>>>>>> master
 
         - int of the object_id.
         '''
         self.grasp_array[16] = object_id
 
+<<<<<<< HEAD
     def to_open3d_geometry(self):
+=======
+    def transform(self, T):
+>>>>>>> master
         '''
+        **Input:**
+
+        - T: np.array of shape (4, 4)
+        
+        **Output:**
+
+        - Grasp instance after transformation, the original Grasp will also be changed.
+        '''
+        rotation = T[:3,:3]
+        translation = T[:3,3]
+        self.translation = np.dot(rotation, self.translation.reshape((3,1))).reshape(-1) + translation
+        self.rotation_matrix = np.dot(rotation, self.rotation_matrix)
+        return self
+
+    def to_open3d_geometry(self, color=None):
+        '''
+        **Input:**
+
+        - color: optional, tuple of shape (3) denotes (r, g, b), e.g., (1,0,0) for red
+
         **Ouput:**
 
         - list of open3d.geometry.Geometry of the gripper.
         '''
+<<<<<<< HEAD
         return plot_gripper_pro_max(self.translation, self.rotation_matrix, self.width, self.depth, score = self.score)
+=======
+        return plot_gripper_pro_max(self.translation, self.rotation_matrix, self.width, self.depth, score = self.score, color = color)
+>>>>>>> master
 
 class GraspGroup():
     def __init__(self, *args):
@@ -369,7 +404,33 @@ class GraspGroup():
 
         - numpy array of shape (-1, ) of the object ids.
         '''
-        return self.grasp_group_array[:,16].astype(np.int32)
+        return self.grasp_group_array[:,16]
+
+    @object_ids.setter
+    def object_ids(self, object_ids):
+        '''
+        **Input:**
+
+        - object_ids: numpy array of shape (-1, ) of the object_ids.
+        '''
+        assert object_ids.size == len(self)
+        self.grasp_group_array[:,16] = copy.deepcopy(object_ids)
+
+    def transform(self, T):
+        '''
+        **Input:**
+
+        - T: np.array of shape (4, 4)
+        
+        **Output:**
+
+        - GraspGroup instance after transformation, the original GraspGroup will also be changed.
+        '''
+        rotation = T[:3,:3]
+        translation = T[:3,3]
+        self.translations = np.dot(rotation, self.translations.T).T + translation # (-1, 3)
+        self.rotation_matrices = np.matmul(rotation, self.rotation_matrices).reshape((-1, 3, 3)) # (-1, 9)
+        return self
 
     @object_ids.setter
     def object_ids(self, object_ids):
@@ -556,11 +617,19 @@ class RectGrasp():
     def score(self, score):
         '''
         **input:**
+<<<<<<< HEAD
 
         - float of the score.
         '''
         self.rect_grasp_array[5] = score
 
+=======
+
+        - float of the score.
+        '''
+        self.rect_grasp_array[5] = score
+
+>>>>>>> master
     @property
     def height(self):
         '''
@@ -955,7 +1024,8 @@ class RectGraspGroup():
         norm_open_point_vector = np.linalg.norm(open_point_vector, axis = 1).reshape(-1, 1)
         unit_open_point_vector = open_point_vector / np.hstack((norm_open_point_vector, norm_open_point_vector)) # (-1, 2)
         counter_clock_wise_rotation_matrix = np.array([[0,-1], [1, 0]])
-        upper_points = np.dot(counter_clock_wise_rotation_matrix, unit_open_point_vector.reshape(-1, 2, 1)).reshape(-1, 2) * np.hstack([heights, heights]) / 2 + centers # (-1, 2)
+        # upper_points = np.dot(counter_clock_wise_rotation_matrix, unit_open_point_vector.reshape(-1, 2, 1)).reshape(-1, 2) * np.hstack([heights, heights]) / 2 + centers # (-1, 2)
+        upper_points = np.einsum('ij,njk->nik', counter_clock_wise_rotation_matrix, unit_open_point_vector.reshape(-1, 2, 1)).reshape(-1, 2) * np.hstack([heights, heights]) / 2 + centers # (-1, 2)
         return centers, open_points, upper_points
 
     def to_grasp_group(self, camera, depths, depth_method = batch_center_depth):

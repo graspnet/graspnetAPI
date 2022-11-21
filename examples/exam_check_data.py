@@ -19,4 +19,4 @@ if __name__ == '__main__':
 
     g = GraspNet(graspnet_root, 'realsense', 'all')
     if g.checkDataCompleteness():
-        print('Check for kinect passed')
+        print('Check for realsense passed')

@@ -1,6 +1,9 @@
 # graspnetAPI
+[![PyPI version](https://badge.fury.io/py/graspnetAPI.svg)](https://badge.fury.io/py/graspnetAPI)
 
-GraspNet API comming soon!
+## Dataset
+
+Visit the [GraspNet Website](http://graspnet.net) to get the dataset.
 
 ## Dataset
 
@@ -11,12 +14,39 @@ Visit the [GraspNet Website](http://graspnet.net) to get the dataset.
 Refer to [document](http://graspnet.net/docs/index.html) for more details.
 
 ## Install
+You can install using pip.
+```bash
+pip install graspnetAPI
+```
+
+You can also install from source.
 
 ```bash
 git clone https://github.com/graspnet/graspnetAPI.git
 cd graspnetAPI
-bash install.sh
+pip install .
 ```
+
+## Document
+
+Refer to [online document](https://graspnetapi.readthedocs.io/en/latest/index.html) for more details.  
+[PDF Document](https://graspnetapi.readthedocs.io/_/downloads/en/latest/pdf/) is available, too. 
+
+You can also build the doc manually.
+```bash
+cd docs
+pip install -r requirements.txt
+bash build_doc.sh
+```
+
+LaTeX is required to build the pdf, but html can be built anyway.
+
+## Grasp Definition
+The frame of our gripper is defined as 
+<div align="center">
+    <img src="grasp_definition.png", width="400">
+</div>
+
 
 ## Examples
 ```bash
@@ -36,15 +66,30 @@ python3 exam_check_data.py
 # you can also run other examples
 ```
 
-<!-- ## Rectangle Grasp Labels
+Please refer to our document for more examples.
 
-1. Download the rectangle label file [rect_labels.tar.gz](https://graspnet.net/datasets.html).  
-2. Unzip the file by running  
-```bash
-tar -xzvf rect_labels.tar.gz
+## Citation
+Please cite these papers in your publications if it helps your research:
 ```
-3. Modify the root path for graspnet in copy_rect_labels.py.  
-3. Run copy_rect_labels.py to copy the labels into the corresponding folder.
-```bash
-python3 copy_rect_labels.py
-``` -->
+@inproceedings{fang2020graspnet,
+  title={GraspNet-1Billion: A Large-Scale Benchmark for General Object Grasping},
+  author={Fang, Hao-Shu and Wang, Chenxi and Gou, Minghao and Lu, Cewu},
+  booktitle={Proceedings of the IEEE/CVF Conference on Computer Vision and Pattern Recognition(CVPR)},
+  pages={11444--11453},
+  year={2020}
+}
+```
+
+## Change Log
+
+#### 1.2.6
+
+- Add transformation for Grasp and GraspGroup.
+
+#### 1.2.7
+
+- Add inpainting for depth image.
+
+#### 1.2.8
+
+- Minor fix bug on loadScenePointCloud.

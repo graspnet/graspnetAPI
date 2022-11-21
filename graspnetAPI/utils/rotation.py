@@ -1,3 +1,7 @@
+""" Author: chenxi-wang
+    Transformation matrices from/to viewpoints and dexnet gripper params.
+"""
+
 import numpy as np
 from math import pi
 
@@ -51,7 +55,7 @@ def matrix_to_dexnet_params(matrix):
     R = np.c_[axis_x, np.c_[axis_y, axis_z]]
     approach = R.T.dot(approach)
     cos_t, sin_t = approach[0], -approach[2]
-    angle = np.arccos(cos_t)
+    angle = np.arccos(max(min(cos_t,1),-1))
     if sin_t < 0:
         angle = pi * 2 - angle
     return binormal, angle

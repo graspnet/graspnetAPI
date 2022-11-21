@@ -8,6 +8,9 @@ from .rotation import batch_viewpoint_params_to_matrix
 from .xmlhandler import xmlReader
 
 class CameraInfo():
+    ''' Author: chenxi-wang
+    Camera intrinsics for point cloud generation.
+    '''
     def __init__(self, width, height, fx, fy, cx, cy, scale):
         self.width = width
         self.height = height
@@ -49,6 +52,23 @@ def create_point_cloud_from_depth_image(depth, camera, organized=True):
     return cloud
 
 def generate_views(N, phi=(np.sqrt(5)-1)/2, center=np.zeros(3, dtype=np.float32), R=1):
+    ''' Author: chenxi-wang
+    View sampling on a sphere using Febonacci lattices.
+
+    **Input:**
+
+    - N: int, number of viewpoints.
+
+    - phi: float, constant angle to sample views, usually 0.618.
+
+    - center: numpy array of (3,), sphere center.
+
+    - R: float, sphere radius.
+
+    **Output:**
+
+    - numpy array of (N, 3), coordinates of viewpoints.
+    '''
     idxs = np.arange(N, dtype=np.float32)
     Z = (2 * idxs + 1) / N - 1
     X = np.sqrt(1 - Z**2) * np.cos(2 * idxs * np.pi * phi)
@@ -58,6 +78,30 @@ def generate_views(N, phi=(np.sqrt(5)-1)/2, center=np.zeros(3, dtype=np.float32)
     return views
 
 def generate_scene_model(dataset_root, scene_name, anno_idx, return_poses=False, align=False, camera='realsense'):
+<<<<<<< HEAD
+=======
+    '''
+    Author: chenxi-wang
+
+    **Input:**
+
+    - dataset_root: str, graspnet dataset root
+
+    - scene_name: str, name of scene folder, e.g. scene_0000
+
+    - anno_idx: int, frame index from 0-255
+
+    - return_poses: bool, return object ids and 6D poses if set to True
+
+    - align: bool, transform to table coordinates if set to True
+
+    - camera: str, camera name (realsense or kinect)
+
+    **Output:**
+
+    - list of open3d.geometry.PointCloud.
+    '''
+>>>>>>> master
     if align:
         camera_poses = np.load(os.path.join(dataset_root, 'scenes', scene_name, camera, 'camera_poses.npy'))
         camera_pose = camera_poses[anno_idx]
@@ -92,6 +136,25 @@ def generate_scene_model(dataset_root, scene_name, anno_idx, return_poses=False,
         return model_list
 
 def generate_scene_pointcloud(dataset_root, scene_name, anno_idx, align=False, camera='kinect'):
+    '''
+    Author: chenxi-wang
+
+    **Input:**
+
+    - dataset_root: str, graspnet dataset root
+
+    - scene_name: str, name of scene folder, e.g. scene_0000
+
+    - anno_idx: int, frame index from 0-255
+
+    - align: bool, transform to table coordinates if set to True
+
+    - camera: str, camera name (realsense or kinect)
+
+    **Output:**
+
+    - open3d.geometry.PointCloud.
+    '''
     colors = np.array(Image.open(os.path.join(dataset_root, 'scenes', scene_name, camera, 'rgb', '%04d.png'%anno_idx)), dtype=np.float32) / 255.0
     depths = np.array(Image.open(os.path.join(dataset_root, 'scenes', scene_name, camera, 'depth', '%04d.png'%anno_idx)))
     intrinsics = np.load(os.path.join(dataset_root, 'scenes', scene_name, camera, 'camK.npy'))
@@ -126,6 +189,17 @@ def generate_scene_pointcloud(dataset_root, scene_name, anno_idx, align=False, c
     return cloud
 
 def rotation_matrix(rx, ry, rz):
+    '''
+    Author: chenxi-wang
+
+    **Input:**
+
+    - rx/ry/rz: float, rotation angle along x/y/z-axis
+
+    **Output:**
+
+    - numpy array of (3, 3), rotation matrix.
+    '''
     Rx = np.array([[1,          0,           0],
                    [0, np.cos(rx), -np.sin(rx)],
                    [0, np.sin(rx),  np.cos(rx)]])
@@ -139,6 +213,19 @@ def rotation_matrix(rx, ry, rz):
     return R
 
 def transform_matrix(tx, ty, tz, rx, ry, rz):
+    '''
+    Author: chenxi-wang
+
+    **Input:**
+
+    - tx/ty/tz: float, translation along x/y/z-axis
+
+    - rx/ry/rz: float, rotation angle along x/y/z-axis
+
+    **Output:**
+
+    - numpy array of (4, 4), transformation matrix.
+    '''
     trans = np.eye(4)
     trans[:3,3] = np.array([tx, ty, tz])
     rot_x = np.array([[1,          0,           0],
@@ -154,6 +241,19 @@ def transform_matrix(tx, ty, tz, rx, ry, rz):
     return trans
 
 def matrix_to_dexnet_params(matrix):
+    '''
+    Author: chenxi-wang
+
+    **Input:**
+    
+    - numpy array of shape (3, 3) of the rotation matrix.
+
+    **Output:**
+
+    - binormal: numpy array of shape (3,).
+    
+    - angle: float of the angle.
+    '''
     approach = matrix[:, 0]
     binormal = matrix[:, 1]
     axis_y = binormal
@@ -172,6 +272,19 @@ def matrix_to_dexnet_params(matrix):
     return binormal, angle
 
 def viewpoint_params_to_matrix(towards, angle):
+    '''
+    Author: chenxi-wang
+
+    **Input:**
+
+    - towards: numpy array towards vector with shape (3,).
+
+    - angle: float of in-plane rotation.
+
+    **Output:**
+
+    - numpy array of the rotation matrix with shape (3, 3).
+    '''
     axis_x = towards
     axis_y = np.array([-axis_x[1], axis_x[0], 0])
     if np.linalg.norm(axis_y) == 0:
@@ -187,6 +300,19 @@ def viewpoint_params_to_matrix(towards, angle):
     return matrix
 
 def dexnet_params_to_matrix(binormal, angle):
+    '''
+    Author: chenxi-wang
+
+    **Input:**
+
+    - binormal: numpy array of shape (3,).
+    
+    - angle: float of the angle.
+
+    **Output:**
+
+    - numpy array of shape (3, 3) of the rotation matrix.
+    '''
     axis_y = binormal
     axis_x = np.array([axis_y[1], -axis_y[0], 0])
     if np.linalg.norm(axis_x) == 0:
@@ -202,12 +328,28 @@ def dexnet_params_to_matrix(binormal, angle):
     return matrix
 
 def transform_points(points, trans):
+    '''
+    Author: chenxi-wang
+    
+    **Input:**
+
+    - points: numpy array of (N,3), point cloud
+    
+    - trans: numpy array of (4,4), transformation matrix
+
+    **Output:**
+
+    - numpy array of (N,3), transformed points.
+    '''
     ones = np.ones([points.shape[0],1], dtype=points.dtype)
     points_ = np.concatenate([points, ones], axis=-1)
     points_ = np.matmul(trans, points_.T).T
     return points_[:,:3]
 
 def get_model_grasps(datapath):
+    ''' Author: chenxi-wang
+    Load grasp labels from .npz files.
+    '''
     label = np.load(datapath)
     points = label['points']
     offsets = label['offsets']
@@ -216,6 +358,9 @@ def get_model_grasps(datapath):
     return points, offsets, scores, collision
 
 def parse_posevector(posevector):
+    ''' Author: chenxi-wang
+    Decode posevector to object id and transformation matrix.
+    '''
     mat = np.zeros([4,4],dtype=np.float32)
     alpha, beta, gamma = posevector[4:7]
     alpha = alpha / 180.0 * np.pi
@@ -228,6 +373,9 @@ def parse_posevector(posevector):
     return obj_idx, mat
 
 def create_mesh_box(width, height, depth, dx=0, dy=0, dz=0):
+    ''' Author: chenxi-wang
+    Create box instance with mesh representation.
+    '''
     box = o3d.geometry.TriangleMesh()
     vertices = np.array([[0,0,0],
                          [width,0,0],
@@ -248,6 +396,21 @@ def create_mesh_box(width, height, depth, dx=0, dy=0, dz=0):
     return box
 
 def create_table_cloud(width, height, depth, dx=0, dy=0, dz=0, grid_size=0.01):
+    '''
+    Author: chenxi-wang
+    
+    **Input:**
+
+    - width/height/depth: float, table width/height/depth along x/z/y-axis in meters
+
+    - dx/dy/dz: float, offset along x/y/z-axis in meters
+
+    - grid_size: float, point distance along x/y/z-axis in meters
+
+    **Output:**
+
+    - open3d.geometry.PointCloud
+    '''
     xmap = np.linspace(0, width, int(width/grid_size))
     ymap = np.linspace(0, depth, int(depth/grid_size))
     zmap = np.linspace(0, height, int(height/grid_size))
@@ -257,7 +420,6 @@ def create_table_cloud(width, height, depth, dx=0, dy=0, dz=0, grid_size=0.01):
     zmap += dz
     points = np.stack([xmap, ymap, zmap], axis=-1)
     points = points.reshape([-1, 3])
-    # print('points',points.shape)
     cloud = o3d.geometry.PointCloud()
     cloud.points = o3d.utility.Vector3dVector(points)
     return cloud
@@ -291,10 +453,23 @@ def plot_axis(R,center,length,grid_size = 0.01):
     cloud.points = o3d.utility.Vector3dVector(p)
     return cloud
 
-def plot_gripper_pro_max(center, R, width, depth, score=1):
+def plot_gripper_pro_max(center, R, width, depth, score=1, color=None):
     '''
-        center: target point
-        R: rotation matrix
+    Author: chenxi-wang
+    
+    **Input:**
+
+    - center: numpy array of (3,), target point as gripper center
+
+    - R: numpy array of (3,3), rotation matrix of gripper
+
+    - width: float, gripper width
+
+    - score: float, grasp quality score
+
+    **Output:**
+
+    - open3d.geometry.TriangleMesh
     '''
     x, y, z = center
     height=0.004
@@ -302,9 +477,13 @@ def plot_gripper_pro_max(center, R, width, depth, score=1):
     tail_length = 0.04
     depth_base = 0.02
     
-    color_r = score # red for high score
-    color_b = 1 - score # blue for low score
-    color_g = 0
+    if color is not None:
+        color_r, color_g, color_b = color
+    else:
+        color_r = score # red for high score
+        color_g = 0
+        color_b = 1 - score # blue for low score
+    
     left = create_mesh_box(depth+depth_base+finger_width, finger_width, height)
     right = create_mesh_box(depth+depth_base+finger_width, finger_width, height)
     bottom = create_mesh_box(finger_width, width, height)
@@ -555,7 +734,7 @@ def center_depth(depths, center, open_point, upper_point):
 
     - depth: float of the grasp depth.
     '''
-    return depths[round(center[1]), round(center[0])]
+    return depths[int(round(center[1])), int(round(center[0]))]
 
 def batch_center_depth(depths, centers, open_points, upper_points):
     '''

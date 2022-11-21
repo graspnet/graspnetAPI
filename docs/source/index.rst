@@ -12,6 +12,7 @@ Welcome to graspnetAPI's documentation!
 
    about
    install
+   grasp_format
 
 Examples
 =========

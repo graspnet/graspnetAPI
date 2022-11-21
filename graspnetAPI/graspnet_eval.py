@@ -1,5 +1,4 @@
 __author__ = 'mhgou, cxwang and hsfang'
-__version__ = '1.0'
 
 import numpy as np
 import os
@@ -92,7 +91,11 @@ class GraspNetEval(GraspNet):
             pose_list.append(mat)
         return obj_list, pose_list, camera_pose, align_mat
         
+<<<<<<< HEAD
     def eval_scene(self, scene_id, dump_folder, return_list = False,vis = False):
+=======
+    def eval_scene(self, scene_id, dump_folder, TOP_K = 50, return_list = False,vis = False, max_width = 0.1):
+>>>>>>> master
         '''
         **Input:**
 
@@ -100,79 +103,99 @@ class GraspNetEval(GraspNet):
         
         - dump_folder: string of the folder that saves the dumped npy files.
 
+<<<<<<< HEAD
+=======
+        - TOP_K: int of the top number of grasp to evaluate
+
+>>>>>>> master
         - return_list: bool of whether to return the result list.
 
         - vis: bool of whether to show the result
 
+<<<<<<< HEAD
+=======
+        - max_width: float of the maximum gripper width in evaluation
+
+>>>>>>> master
         **Output:**
 
         - scene_accuracy: np.array of shape (256, 50, 6) of the accuracy tensor.
         '''
         config = get_config()
         table = create_table_points(1.0, 1.0, 0.05, dx=-0.5, dy=-0.5, dz=-0.05, grid_size=0.008)
-        TOP_K = 50
+        
         list_coe_of_friction = [0.2,0.4,0.6,0.8,1.0,1.2]
 
-        # for scene_id in range(115,116):
         model_list, dexmodel_list, _ = self.get_scene_models(scene_id, ann_id=0)
-        # print('model loading time: %f' % (toc-tic))
+
         model_sampled_list = list()
-        # tic = time.time()
         for model in model_list:
             model_sampled = voxel_sample_points(model, 0.008)
             model_sampled_list.append(model_sampled)
-        # toc = time.time()
-        # print('model voxel sample time: %f' % (toc-tic))
+
         scene_accuracy = []
         grasp_list_list = []
         score_list_list = []
         collision_list_list = []
 
         for ann_id in range(256):
-            # print('scene id:{}, ann id:{}'.format(scene_id, ann_id))
-            # grasps = np.array(np.load(os.path.join(dump_folder,get_scene_name(scene_id), camera, '%04d.npz' % (ann_id,)))['preds'][0])
             grasp_group = GraspGroup().from_npy(os.path.join(dump_folder,get_scene_name(scene_id), self.camera, '%04d.npy' % (ann_id,)))
             _, pose_list, camera_pose, align_mat = self.get_model_poses(scene_id, ann_id)
             table_trans = transform_points(table, np.linalg.inv(np.matmul(align_mat, camera_pose)))
 
-            # model level list
-            # tic = time.time()
-            grasp_list, score_list, collision_mask_list = eval_grasp(grasp_group, model_sampled_list, dexmodel_list, pose_list, config, table=table_trans, voxel_size=0.008)
-            # toc = time.time()
+            # clip width to [0,max_width]
+            gg_array = grasp_group.grasp_group_array
+            min_width_mask = (gg_array[:,1] < 0)
+            max_width_mask = (gg_array[:,1] > max_width)
+            gg_array[min_width_mask,1] = 0
+            gg_array[max_width_mask,1] = max_width
+            grasp_group.grasp_group_array = gg_array
 
-            # concat into scene level
+            grasp_list, score_list, collision_mask_list = eval_grasp(grasp_group, model_sampled_list, dexmodel_list, pose_list, config, table=table_trans, voxel_size=0.008, TOP_K = TOP_K)
+
             # remove empty
-            grasp_list = [x for x in grasp_list if len(x[0])!= 0]
-            score_list = [x for x in score_list if len(x)!=0]
+            grasp_list = [x for x in grasp_list if len(x) != 0]
+            score_list = [x for x in score_list if len(x) != 0]
             collision_mask_list = [x for x in collision_mask_list if len(x)!=0]
 
+            if len(grasp_list) == 0:
+                grasp_accuracy = np.zeros((TOP_K,len(list_coe_of_friction)))
+                scene_accuracy.append(grasp_accuracy)
+                grasp_list_list.append([])
+                score_list_list.append([])
+                collision_list_list.append([])
+                print('\rMean Accuracy for scene:{} ann:{}='.format(scene_id, ann_id),np.mean(grasp_accuracy[:,:]), end='')
+                continue
+
+            # concat into scene level
             grasp_list, score_list, collision_mask_list = np.concatenate(grasp_list), np.concatenate(score_list), np.concatenate(collision_mask_list)
-            # print(f'grasp list:{grasp_list}, len = {len(grasp_list)}')
-            # print(f'score list:{score_list}, len = {len(score_list)}')
-            # print(f'collision mask list:{collision_mask_list}, len = {len(collision_mask_list)}')
+            
             if vis:
                 t = o3d.geometry.PointCloud()
                 t.points = o3d.utility.Vector3dVector(table_trans)
                 model_list = generate_scene_model(self.root, 'scene_%04d' % scene_id , ann_id, return_poses=False, align=False, camera=self.camera)
-                gg = GraspGroup(grasp_list)
+                import copy
+                gg = GraspGroup(copy.deepcopy(grasp_list))
                 scores = np.array(score_list)
                 scores = scores / 2 + 0.5 # -1 -> 0, 0 -> 0.5, 1 -> 1
                 scores[collision_mask_list] = 0.3
-                gg.set_scores(scores)
-                gg.set_widths(0.1 * np.ones((len(gg)), dtype = np.float32))
+                gg.scores = scores
+                gg.widths = 0.1 * np.ones((len(gg)), dtype = np.float32)
                 grasps_geometry = gg.to_open3d_geometry_list()
                 pcd = self.loadScenePointCloud(scene_id, self.camera, ann_id)
 
                 o3d.visualization.draw_geometries([pcd, *grasps_geometry])
                 o3d.visualization.draw_geometries([pcd, *grasps_geometry, *model_list])
                 o3d.visualization.draw_geometries([*grasps_geometry, *model_list, t])
-            grasp_list_list.append(grasp_list)
-            score_list_list.append(score_list)
-            collision_list_list.append(collision_mask_list)
+            
             # sort in scene level
             grasp_confidence = grasp_list[:,0]
             indices = np.argsort(-grasp_confidence)
             grasp_list, score_list, collision_mask_list = grasp_list[indices], score_list[indices], collision_mask_list[indices]
+
+            grasp_list_list.append(grasp_list)
+            score_list_list.append(score_list)
+            collision_list_list.append(collision_mask_list)
 
             #calculate AP
             grasp_accuracy = np.zeros((TOP_K,len(list_coe_of_friction)))
@@ -183,7 +206,11 @@ class GraspNetEval(GraspNet):
                     else:
                         grasp_accuracy[k,fric_idx] = np.sum(((score_list[0:k+1]<=fric) & (score_list[0:k+1]>0)).astype(int))/(k+1)
 
+<<<<<<< HEAD
             print('\rMean Accuracy for scene:{} ann:{}='.format(scene_id, ann_id),np.mean(grasp_accuracy[:,:]), end='')
+=======
+            print('\rMean Accuracy for scene:%04d ann:%04d = %.3f' % (scene_id, ann_id, 100.0 * np.mean(grasp_accuracy[:,:])), end='', flush=True)
+>>>>>>> master
             scene_accuracy.append(grasp_accuracy)
         if not return_list:
             return scene_accuracy
@@ -232,7 +259,45 @@ class GraspNetEval(GraspNet):
         '''
         res = np.array(self.parallel_eval_scenes(scene_ids = list(range(100, 130)), dump_folder = dump_folder, proc = proc))
         ap = np.mean(res)
-        print('\nEvaluation Result:\n----------\n{}, AP={}, AP Seen={}'.format(self.camera, ap, ap))
+        print('\nEvaluation Result:\n----------\n{}, AP Seen={}'.format(self.camera, ap))
+        return res, ap
+
+    def eval_similar(self, dump_folder, proc = 2):
+        '''
+        **Input:**
+
+        - dump_folder: string of the folder that saves the npy files.
+
+        - proc: int of the number of processes to use to evaluate.
+
+        **Output:**
+
+        - res: numpy array of the detailed accuracy.
+
+        - ap: float of the AP for similar split.
+        '''
+        res = np.array(self.parallel_eval_scenes(scene_ids = list(range(130, 160)), dump_folder = dump_folder, proc = proc))
+        ap = np.mean(res)
+        print('\nEvaluation Result:\n----------\n{}, AP={}, AP Similar={}'.format(self.camera, ap, ap))
+        return res, ap
+
+    def eval_novel(self, dump_folder, proc = 2):
+        '''
+        **Input:**
+
+        - dump_folder: string of the folder that saves the npy files.
+
+        - proc: int of the number of processes to use to evaluate.
+
+        **Output:**
+
+        - res: numpy array of the detailed accuracy.
+
+        - ap: float of the AP for novel split.
+        '''
+        res = np.array(self.parallel_eval_scenes(scene_ids = list(range(160, 190)), dump_folder = dump_folder, proc = proc))
+        ap = np.mean(res)
+        print('\nEvaluation Result:\n----------\n{}, AP={}, AP Novel={}'.format(self.camera, ap, ap))
         return res, ap
 
     def eval_similar(self, dump_folder, proc = 2):
