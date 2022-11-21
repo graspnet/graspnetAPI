@@ -354,6 +354,15 @@ def get_model_grasps(datapath):
     collision = label['collision']
     return points, offsets, scores, collision
 
+def get_model_fricreps(datapath):
+    ''' Author: chenxi-wang, h.s-fang
+    Load grasp labels from .npz files.
+    '''
+    label = np.load(datapath)
+    points = label['points']
+    data = label['data']
+    return points, data
+
 def parse_posevector(posevector):
     ''' Author: chenxi-wang
     Decode posevector to object id and transformation matrix.

@@ -33,13 +33,17 @@ __author__ = 'hsfang, mhgou, cxwang'
 #  loadScenePointCloud  - Load point cloud constructed by the depth and color image.
 #  loadWorkSpace        - Load the workspace bounding box.
 #  loadGraspLabels      - Load grasp labels with the specified object ids.
+#  loadObjFricReps      - Load grasp friction based representations with the specified object ids, 
 #  loadObjModels        - Load object 3d mesh model with the specified object ids.
 #  loadObjTrimesh       - Load object 3d mesh in Trimesh format.
 #  loadCollisionLabels  - Load collision labels with the specified scene ids.
 #  loadGrasp            - Load grasp labels with the specified scene and annotation id.
+#  loadSceneFricReps    - Load grasp friction based representations with the specified scene and annotation id.
 #  loadData             - Load data path with the specified data ids.
 #  showObjGrasp         - Save visualization of the grasp pose of specified object ids.
 #  showSceneGrasp       - Save visualization of the grasp pose of specified scene ids.
+#  showObjFricReps      - Save visualization of the grasp friction based representations of specified object ids.
+#  showSceneFricReps    - Save visualization of the grasp friction based representations of specified scene ids.
 #  show6DPose           - Save visualization of the 6d pose of specified scene ids, project obj models onto pointcloud
 # Throughout the API "ann"=annotation, "obj"=object, and "img"=image.
 
@@ -278,6 +282,27 @@ class GraspNet():
             file = np.load(os.path.join(self.root, 'grasp_label', '{}_labels.npz'.format(str(i).zfill(3))))
             graspLabels[i] = (file['points'].astype(np.float32), file['offsets'].astype(np.float32), file['scores'].astype(np.float32))
         return graspLabels
+    
+    def loadObjFricReps(self, objIds=None):
+        '''
+        **Input:**
+
+        - objIds: int or list of int of the object ids.
+
+        **Output:**
+
+        - a dict of friction representations of each object. 
+        '''
+        # load object-level grasp labels of the given obj ids
+        objIds = self.objIds if objIds is None else objIds
+        assert _isArrayLike(objIds) or isinstance(objIds, int), 'objIds must be an integer or a list/numpy array of integers'
+        objIds = objIds if _isArrayLike(objIds) else [objIds]
+        ObjFricReps = {}
+        for i in tqdm(objIds, desc='Loading object friction representations...'):
+            file = np.load(os.path.join(self.root, 'fric_representation', '{}_labels.npz'.format(str(i).zfill(3))))
+            ObjFricReps[i] = (file['points'].astype(np.float32), file['offsets'].astype(np.float32), file['scores'].astype(np.float32))
+        return ObjFricReps
+        
 
     def loadObjModels(self, objIds=None):
         '''
@@ -662,6 +687,105 @@ class GraspNet():
             rect_grasps = RectGraspGroup(os.path.join(self.root,'scenes','scene_%04d' % sceneId,camera,'rect','%04d.npy' % annId))
             return rect_grasps
 
+    def loadSceneFricReps(self, sceneId, annId=0, camera='kinect', fric_reps = None, collision_labels = None, fric_coef_thresh=0.4):
+        '''
+        TODO@fang-haoshu
+        **Input:**
+
+        - sceneId: int of scene id.
+
+        - annId: int of annotation id.
+
+        - camera: string of camera type, 'kinect' or 'realsense'.
+
+        - fric_reps: dict of object friction based representations. Call self.loadObjFricReps if not given.
+
+        - collision_labels: dict of collision labels. Call self.loadCollisionLabels if not given.
+
+        - fric_coef_thresh: float of the frcition coefficient threshold of the grasp. 
+
+        **ATTENTION**
+
+        the LOWER the friction coefficient is, the better the grasp is.
+
+        **Output:**
+
+        - return a GraspGroup instance.
+        '''
+        import numpy as np
+        assert format == '6d' or format == 'rect', 'format must be "6d" or "rect"'
+        if format == '6d':
+            from .utils.xmlhandler import xmlReader
+            from .utils.utils import get_obj_pose_list, generate_views, get_model_grasps, transform_points
+            from .utils.rotation import batch_viewpoint_params_to_matrix
+            
+            camera_poses = np.load(os.path.join(self.root,'scenes','scene_%04d' %(sceneId,),camera, 'camera_poses.npy'))
+            camera_pose = camera_poses[annId]
+            scene_reader = xmlReader(os.path.join(self.root,'scenes','scene_%04d' %(sceneId,),camera,'annotations','%04d.xml' %(annId,)))
+            pose_vectors = scene_reader.getposevectorlist()
+
+            obj_list,pose_list = get_obj_pose_list(camera_pose,pose_vectors)
+            if grasp_labels is None:
+                print('warning: grasp_labels are not given, calling self.loadGraspLabels to retrieve them')
+                grasp_labels = self.loadGraspLabels(objIds = obj_list)
+            if collision_labels is None:
+                print('warning: collision_labels are not given, calling self.loadCollisionLabels to retrieve them')
+                collision_labels = self.loadCollisionLabels(sceneId)
+
+            num_views, num_angles, num_depths = 300, 12, 4
+            template_views = generate_views(num_views)
+            template_views = template_views[np.newaxis, :, np.newaxis, np.newaxis, :]
+            template_views = np.tile(template_views, [1, 1, num_angles, num_depths, 1])
+
+            collision_dump = collision_labels['scene_'+str(sceneId).zfill(4)]
+
+            # grasp = dict()
+            grasp_group = GraspGroup()
+            for i, (obj_idx, trans) in enumerate(zip(obj_list, pose_list)):
+
+                sampled_points, offsets, fric_coefs = grasp_labels[obj_idx]
+                collision = collision_dump[i]
+                point_inds = np.arange(sampled_points.shape[0])
+
+                num_points = len(point_inds)
+                target_points = sampled_points[:, np.newaxis, np.newaxis, np.newaxis, :]
+                target_points = np.tile(target_points, [1, num_views, num_angles, num_depths, 1])
+                views = np.tile(template_views, [num_points, 1, 1, 1, 1])
+                angles = offsets[:, :, :, :, 0]
+                depths = offsets[:, :, :, :, 1]
+                widths = offsets[:, :, :, :, 2]
+
+                mask1 = ((fric_coefs <= fric_coef_thresh) & (fric_coefs > 0) & ~collision)
+                target_points = target_points[mask1]
+                target_points = transform_points(target_points, trans)
+                target_points = transform_points(target_points, np.linalg.inv(camera_pose))
+                views = views[mask1]
+                angles = angles[mask1]
+                depths = depths[mask1]
+                widths = widths[mask1]
+                fric_coefs = fric_coefs[mask1]
+
+                Rs = batch_viewpoint_params_to_matrix(-views, angles)
+                Rs = np.matmul(trans[np.newaxis, :3, :3], Rs)
+                Rs = np.matmul(np.linalg.inv(camera_pose)[np.newaxis,:3,:3], Rs)
+
+                num_grasp = widths.shape[0]
+                scores = (1.1 - fric_coefs).reshape(-1,1)
+                widths = widths.reshape(-1,1)
+                heights = GRASP_HEIGHT * np.ones((num_grasp,1))
+                depths = depths.reshape(-1,1)
+                rotations = Rs.reshape((-1,9))
+                object_ids = obj_idx * np.ones((num_grasp,1), dtype=np.int32)
+
+                obj_grasp_array = np.hstack([scores, widths, heights, depths, rotations, target_points, object_ids]).astype(np.float32)
+
+                grasp_group.grasp_group_array = np.concatenate((grasp_group.grasp_group_array, obj_grasp_array))
+            return grasp_group
+        else:
+            # 'rect'
+            rect_grasps = RectGraspGroup(os.path.join(self.root,'scenes','scene_%04d' % sceneId,camera,'rect','%04d.npy' % annId))
+            return rect_grasps
+
     def loadData(self, ids=None, *extargs):
         '''
         **Input:**
@@ -722,6 +846,71 @@ class GraspNet():
         - No output but save the rendered image and maybe show it.
         '''
         from .utils.vis import visObjGrasp
+        objIds = objIds if _isArrayLike(objIds) else [objIds]
+        if len(objIds) == 0:
+            print('You need to specify object ids.')
+            return 0
+
+        if not os.path.exists(saveFolder):
+            os.mkdir(saveFolder)
+        for obj_id in objIds:
+            visObjGrasp(self.root, obj_id, num_grasp=numGrasp, th=th, max_width=maxWidth, save_folder=saveFolder, show=show)
+
+    def showSceneGrasp(self, sceneId, camera = 'kinect', annId = 0, format = '6d', numGrasp = 20, show_object = True, coef_fric_thresh = 0.1):
+        '''
+        **Input:**
+
+        - sceneId: int of the scene index.
+
+        - camera: string of the camera type, 'realsense' or 'kinect'.
+
+        - annId: int of the annotation index.
+
+        - format: int of the annotation type, 'rect' or '6d'.
+
+        - numGrasp: int of the displayed grasp number, grasps will be randomly sampled.
+
+        - coef_fric_thresh: float of the friction coefficient of grasps.
+        '''
+        if format == '6d':
+            geometries = []
+            sceneGrasp = self.loadGrasp(sceneId = sceneId, annId = annId, camera = camera, format = '6d', fric_coef_thresh = coef_fric_thresh)
+            sceneGrasp = sceneGrasp.random_sample(numGrasp = numGrasp)
+            scenePCD = self.loadScenePointCloud(sceneId = sceneId, camera = camera, annId = annId, align = False)
+            geometries.append(scenePCD)
+            geometries += sceneGrasp.to_open3d_geometry_list()
+            if show_object:
+                objectPCD = self.loadSceneModel(sceneId = sceneId, camera = camera, annId = annId, align = False)
+                geometries += objectPCD
+            o3d.visualization.draw_geometries(geometries)
+        elif format == 'rect':
+            bgr = self.loadBGR(sceneId = sceneId, camera = camera, annId = annId)
+            sceneGrasp = self.loadGrasp(sceneId = sceneId, camera = camera, annId = annId, format = 'rect', fric_coef_thresh = coef_fric_thresh)
+            sceneGrasp = sceneGrasp.random_sample(numGrasp = numGrasp)
+            img = sceneGrasp.to_opencv_image(bgr, numGrasp = numGrasp)
+            cv2.imshow('Rectangle Grasps',img)
+            cv2.waitKey(0)
+            cv2.destroyAllWindows()
+
+    def showObjFricReps(self, objIds=[], numGrasp=10, th=0.5, saveFolder='save_fig', show=False):
+        '''
+        **Input:**
+
+        - objIds: int of list of objects ids.
+
+        - numGrasp: how many grasps to show in the image.
+
+        - th: threshold of the coefficient of friction.
+
+        - saveFolder: string of the path to save the rendered image.
+
+        - show: bool of whether to show the image.
+
+        **Output:**
+
+        - No output but save the rendered image and maybe show it.
+        '''
+        from .utils.vis import visObjFricReps
         objIds = objIds if _isArrayLike(objIds) else [objIds]
         if len(objIds) == 0:
             print('You need to specify object ids.')
