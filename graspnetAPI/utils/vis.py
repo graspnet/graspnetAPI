@@ -3,7 +3,7 @@ import time
 import numpy as np
 import open3d as o3d
 from transforms3d.euler import euler2mat, quat2mat
-from .utils import generate_scene_model, generate_scene_pointcloud, generate_views, get_model_grasps, plot_gripper_pro_max, transform_points
+from .utils import generate_scene_model, generate_scene_pointcloud, generate_views, get_model_grasps, get_model_fricreps, plot_gripper_pro_max, plot_fric_reps, transform_points
 from .rotation import viewpoint_params_to_matrix, batch_viewpoint_params_to_matrix
 
 def create_table_cloud(width, height, depth, dx=0, dy=0, dz=0, grid_size=0.01):
@@ -264,7 +264,7 @@ def visObjGrasp(dataset_root, obj_idx, num_grasp=10, th=0.5, max_width=0.08, sav
     plyfile = os.path.join(dataset_root, 'models', '%03d'%obj_idx, 'nontextured.ply')
     model = o3d.io.read_point_cloud(plyfile)
 
-    num_views, num_angles, num_depths = 300, 12, 4
+    num_views = 300
     views = generate_views(num_views)
 
     vis = o3d.visualization.Visualizer()
@@ -323,7 +323,7 @@ def visObjGrasp(dataset_root, obj_idx, num_grasp=10, th=0.5, max_width=0.08, sav
     if show:
         o3d.visualization.draw_geometries([model, *grippers])
 
-def visObjFricReps(dataset_root, obj_idx, num_grasp=10, th=0.5, save_folder='save_fig', show=False):
+def visObjFricReps(dataset_root, obj_idx, num_rep=10, th=0.8, save_folder='save_fig', show=False):
     '''
     Author: chenxi-wang, h.s-fang
     
@@ -333,11 +333,9 @@ def visObjFricReps(dataset_root, obj_idx, num_grasp=10, th=0.5, save_folder='sav
 
     - obj_idx: int, index of object model
 
-    - num_grasp: int, number of sampled grasps
+    - num_rep: int, number of sampled representations
 
-    - th: float, threshold of friction coefficient
-
-    - max_width: float, only visualize grasps with width<=max_width
+    - th: float, threshold of averaged friction coefficient of a view
 
     - save_folder: str, folder to save screen captures
 
@@ -346,7 +344,7 @@ def visObjFricReps(dataset_root, obj_idx, num_grasp=10, th=0.5, save_folder='sav
     plyfile = os.path.join(dataset_root, 'models', '%03d'%obj_idx, 'nontextured.ply')
     model = o3d.io.read_point_cloud(plyfile)
 
-    num_views, num_angles, num_depths = 300, 12, 4
+    num_views = 300
     views = generate_views(num_views)
 
     vis = o3d.visualization.Visualizer()
@@ -357,7 +355,7 @@ def visObjFricReps(dataset_root, obj_idx, num_grasp=10, th=0.5, save_folder='sav
     cam_pos = np.load(os.path.join(dataset_root, 'scenes', 'scene_0000', 'kinect', 'cam0_wrt_table.npy'))
     param.extrinsic = np.linalg.inv(cam_pos).tolist()
 
-    sampled_points, offsets = get_model_fricreps('%s/fric_representation/%03d_labels.npz'%(dataset_root, obj_idx))
+    sampled_points, data = get_model_fricreps('%s/fric_rep/%03d_labels.npz'%(dataset_root, obj_idx))
 
     cnt = 0
     point_inds = np.arange(sampled_points.shape[0])
@@ -366,29 +364,25 @@ def visObjFricReps(dataset_root, obj_idx, num_grasp=10, th=0.5, save_folder='sav
 
     for point_ind in point_inds:
         target_point = sampled_points[point_ind]
-        offset = offsets[point_ind]
+        offset = data[point_ind]
         view_inds = np.arange(300)
         np.random.shuffle(view_inds)
         flag = False
         for v in view_inds:
             if flag: break
-            view = views[v]
-            angle_inds = np.arange(12)
-            np.random.shuffle(angle_inds)
-            for a in angle_inds:
+            depth_inds = np.arange(4)
+            np.random.shuffle(depth_inds)
+            for d in depth_inds:
                 if flag: break
-                depth_inds = np.arange(4)
-                np.random.shuffle(depth_inds)
-                for d in depth_inds:
-                    if flag: break
-                    angle, depth, width = offset[v, a, d]
-                    if score[v, a, d] > th or score[v, a, d] < 0 or width > max_width:
-                        continue
-                    R = viewpoint_params_to_matrix(-view, angle)
-                    t = target_point
-                    gripper = plot_gripper_pro_max(t, R, width, depth, 1.1-score[v, a, d])
-                    grippers.append(gripper)
-                    flag = True
+                sum_mu1, sum_mu2 = np.sum(offset[v, :, d, 1]), np.sum(offset[v, :, d, 3])
+                if sum_mu1 > th*24 or sum_mu1 <= 1 or sum_mu2 > th*24 or sum_mu2 <= 1:
+                    continue
+                depth = 0.005 if d==0 else 0.01*d
+                view = views[v]
+                t = target_point
+                gripper = plot_fric_reps(t, view, depth, offset[v,:,d,:])
+                grippers.append(gripper)
+                flag = True
         if flag:
             cnt += 1
         if cnt == num_grasp:

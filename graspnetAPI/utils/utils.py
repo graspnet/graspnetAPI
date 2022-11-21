@@ -461,7 +461,7 @@ def plot_axis(R,center,length,grid_size = 0.01):
 
 def plot_gripper_pro_max(center, R, width, depth, score=1, color=None):
     '''
-    Author: chenxi-wang
+    Author: chenxi-wang, h.s-fang
     
     **Input:**
 
@@ -471,7 +471,11 @@ def plot_gripper_pro_max(center, R, width, depth, score=1, color=None):
 
     - width: float, gripper width
 
+    - depth: appraoch depth of gripper
+
     - score: float, grasp quality score
+
+    - color: gripper color, by default red for high score and blue for low score
 
     **Output:**
 
@@ -530,6 +534,98 @@ def plot_gripper_pro_max(center, R, width, depth, score=1, color=None):
     gripper.vertex_colors = o3d.utility.Vector3dVector(colors)
     return gripper
 
+def plot_fric_reps(center, view, depth, fric_reps):
+    '''
+    Author: h.s-fang, chenxi-wang
+    
+    **Input:**
+
+    - center: numpy array of (3,), target point as gripper center
+
+    - view: approach view on the object surface
+
+    - depth: appraoch depth of gripper
+
+    - fric_reps: array of (24, 4): 24x(d1, mu1, d2, mu2), distances to the object surface and the frictions
+
+    **Output:**
+
+    - open3d.geometry.TriangleMesh
+    '''
+    x, y, z = center
+    height=0.004
+    finger_width = 0.004
+    tail_length = 0.04
+    depth_base = 0.02
+
+    all_d1, all_mu1, all_d2, all_mu2 = fric_reps[:,0], fric_reps[:,1], fric_reps[:,2], fric_reps[:,3]
+    
+    
+    color1_r = (2-np.clip(all_mu1,0,2))/2 + 0.05 # red for high score
+    color1_g = 0.05
+    color1_b = 0.05
+
+    color2_r = 0.05
+    color2_g = (2-np.clip(all_mu2,0,2))/2 + 0.05 # green for high score
+    color2_b = 0.05
+
+    angle_inds = np.arange(24)
+    angles = (angle_inds-12)/24)*np.pi
+    views = np.repeat(view,24)
+    Rotations = batch_viewpoint_params_to_matrix(-views, angles)
+        
+    for i in range(24):
+        left = create_mesh_box(depth+depth_base+finger_width, finger_width, height)
+        right = create_mesh_box(depth+depth_base+finger_width, finger_width, height)
+        bottom1 = create_mesh_box(finger_width, all_d1[i], height)
+        bottom2 = create_mesh_box(finger_width, all_d2[i], height)
+        tail = create_mesh_box(tail_length, finger_width, height)
+
+        left_points = np.array(left.vertices)
+        left_triangles = np.array(left.triangles)
+        left_points[:,0] -= depth_base + finger_width
+        left_points[:,1] -= all_d1[i] + finger_width
+        left_points[:,2] -= height/2
+        colors_left = np.array([ [color1_r,color1_g,color1_b] for _ in range(len(left.vertices))])
+
+        right_points = np.array(right.vertices)
+        right_triangles = np.array(right.triangles) + 8
+        right_points[:,0] -= depth_base + finger_width
+        right_points[:,1] += all_d2[i] + finger_width
+        right_points[:,2] -= height/2
+        colors_right = np.array([ [color2_r,color2_g,color2_b] for _ in range(len(right.vertices))])
+
+        bottom1_points = np.array(bottom1.vertices)
+        bottom1_triangles = np.array(bottom1.triangles) + 16
+        bottom1_points[:,0] -= finger_width + depth_base
+        bottom1_points[:,1] -= all_d1[i]
+        bottom1_points[:,2] -= height/2
+        colors_bottom1 = np.array([ [color1_r,color1_g,color1_b] for _ in range(len(bottom1.vertices))])
+
+        bottom2_points = np.array(bottom2.vertices)
+        bottom2_triangles = np.array(bottom2.triangles) + 24
+        bottom2_points[:,0] -= finger_width + depth_base
+        bottom2_points[:,1] += all_d2[i]
+        bottom2_points[:,2] -= height/2
+        colors_bottom2 = np.array([ [color2_r,color2_g,color2_b] for _ in range(len(bottom2.vertices))])
+
+        tail_points = np.array(tail.vertices)
+        tail_triangles = np.array(tail.triangles) + 32
+        tail_points[:,0] -= tail_length + finger_width + depth_base
+        tail_points[:,1] -= finger_width / 2
+        tail_points[:,2] -= height/2
+        colors_tail = np.array([ [0.3,0.3,0.3] for _ in range(len(tail.vertices))])
+
+        vertices = np.concatenate([left_points, right_points, bottom_points, tail_points], axis=0)
+        vertices = np.dot(Rotations[i], vertices.T).T + center
+        triangles = np.concatenate([left_triangles, right_triangles, bottom_triangles, tail_triangles], axis=0)
+        colors = np.concatenate([colors_left, colors_right, colors_bottom1, colors_bottom2, colors_tail], axis=0)
+
+    gripper = o3d.geometry.TriangleMesh()
+    gripper.vertices = o3d.utility.Vector3dVector(vertices)
+    gripper.triangles = o3d.utility.Vector3iVector(triangles)
+    gripper.vertex_colors = o3d.utility.Vector3dVector(colors)
+    return gripper
 
 def find_scene_by_model_id(dataset_root, model_id_list):
     picked_scene_names = []

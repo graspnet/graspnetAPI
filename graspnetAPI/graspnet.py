@@ -892,13 +892,13 @@ class GraspNet():
             cv2.waitKey(0)
             cv2.destroyAllWindows()
 
-    def showObjFricReps(self, objIds=[], numGrasp=10, th=0.5, saveFolder='save_fig', show=False):
+    def showObjFricReps(self, objIds=[], numRep=10, th=0.5, saveFolder='save_fig', show=False):
         '''
         **Input:**
 
         - objIds: int of list of objects ids.
 
-        - numGrasp: how many grasps to show in the image.
+        - numRep: how many grasps to show in the image.
 
         - th: threshold of the coefficient of friction.
 
@@ -919,7 +919,7 @@ class GraspNet():
         if not os.path.exists(saveFolder):
             os.mkdir(saveFolder)
         for obj_id in objIds:
-            visObjGrasp(self.root, obj_id, num_grasp=numGrasp, th=th, max_width=maxWidth, save_folder=saveFolder, show=show)
+            visObjFricReps(self.root, obj_id, num_rep=numRep, th=th, save_folder=saveFolder, show=show)
 
     def showSceneGrasp(self, sceneId, camera = 'kinect', annId = 0, format = '6d', numGrasp = 20, show_object = True, coef_fric_thresh = 0.1):
         '''
