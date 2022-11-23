@@ -355,12 +355,12 @@ def visObjFricReps(dataset_root, obj_idx, num_rep=10, th=0.8, save_folder='save_
     cam_pos = np.load(os.path.join(dataset_root, 'scenes', 'scene_0000', 'kinect', 'cam0_wrt_table.npy'))
     param.extrinsic = np.linalg.inv(cam_pos).tolist()
 
-    sampled_points, data = get_model_fricreps('%s/fric_rep/%03d_labels.npz'%(dataset_root, obj_idx))
+    sampled_points, data = get_model_fricreps('%s/fric_rep/%03d_labels_small.npz'%(dataset_root, obj_idx))
 
     cnt = 0
     point_inds = np.arange(sampled_points.shape[0])
     np.random.shuffle(point_inds)
-    grippers = []
+    reps = []
 
     for point_ind in point_inds:
         target_point = sampled_points[point_ind]
@@ -370,33 +370,38 @@ def visObjFricReps(dataset_root, obj_idx, num_rep=10, th=0.8, save_folder='save_
         flag = False
         for v in view_inds:
             if flag: break
-            depth_inds = np.arange(4)
+            depth_inds = np.arange(5)
             np.random.shuffle(depth_inds)
             for d in depth_inds:
                 if flag: break
+                grasp_score_min = np.minimum(offset[v, :, d, 1], offset[v, :, d, 3])
+                grasp_score_max = np.maximum(offset[v, :, d, 1], offset[v, :, d, 3])
+                if not(( (grasp_score_min>0) & (grasp_score_max<th ) ).any()):
+                    continue
                 sum_mu1, sum_mu2 = np.sum(offset[v, :, d, 1]), np.sum(offset[v, :, d, 3])
                 if sum_mu1 > th*24 or sum_mu1 <= 1 or sum_mu2 > th*24 or sum_mu2 <= 1:
                     continue
                 depth = 0.005 if d==0 else 0.01*d
                 view = views[v]
                 t = target_point
-                gripper = plot_fric_reps(t, view, depth, offset[v,:,d,:])
-                grippers.append(gripper)
+                fric_rep = plot_fric_reps(t, view, depth, offset[v,:,d,:])
+                print(point_ind, v, d)
+                reps.append(fric_rep)
                 flag = True
         if flag:
             cnt += 1
-        if cnt == num_grasp:
+        if cnt == num_rep:
             break
 
     vis.add_geometry(model)
-    for gripper in grippers:
-        vis.add_geometry(gripper)
+    for fric_rep in reps:
+        vis.add_geometry(fric_rep)
     ctr.convert_from_pinhole_camera_parameters(param)
     vis.poll_events()
     filename = os.path.join(save_folder, 'object_{}_fric_rep.png'.format(obj_idx))
     vis.capture_screen_image(filename, do_render=True)
     if show:
-        o3d.visualization.draw_geometries([model, *grippers])
+        o3d.visualization.draw_geometries([model, *reps])
 
 def vis_rec_grasp(rec_grasp_tuples,numGrasp,image_path,save_path,show=False):
     '''

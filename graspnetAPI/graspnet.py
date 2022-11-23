@@ -110,22 +110,22 @@ class GraspNet():
         self.sceneName = []
         self.annId = []
 
-        for i in tqdm(self.sceneIds, desc='Loading data path...'):
-            for img_num in range(256):
-                self.rgbPath.append(os.path.join(
-                    root, 'scenes', 'scene_'+str(i).zfill(4), camera, 'rgb', str(img_num).zfill(4)+'.png'))
-                self.depthPath.append(os.path.join(
-                    root, 'scenes', 'scene_'+str(i).zfill(4), camera, 'depth', str(img_num).zfill(4)+'.png'))
-                self.segLabelPath.append(os.path.join(
-                    root, 'scenes', 'scene_'+str(i).zfill(4), camera, 'label', str(img_num).zfill(4)+'.png'))
-                self.metaPath.append(os.path.join(
-                    root, 'scenes', 'scene_'+str(i).zfill(4), camera, 'meta', str(img_num).zfill(4)+'.mat'))
-                self.rectLabelPath.append(os.path.join(
-                    root, 'scenes', 'scene_'+str(i).zfill(4), camera, 'rect', str(img_num).zfill(4)+'.npy'))
-                self.sceneName.append('scene_'+str(i).zfill(4))
-                self.annId.append(img_num)
+        # for i in tqdm(self.sceneIds, desc='Loading data path...'):
+        #     for img_num in range(256):
+        #         self.rgbPath.append(os.path.join(
+        #             root, 'scenes', 'scene_'+str(i).zfill(4), camera, 'rgb', str(img_num).zfill(4)+'.png'))
+        #         self.depthPath.append(os.path.join(
+        #             root, 'scenes', 'scene_'+str(i).zfill(4), camera, 'depth', str(img_num).zfill(4)+'.png'))
+        #         self.segLabelPath.append(os.path.join(
+        #             root, 'scenes', 'scene_'+str(i).zfill(4), camera, 'label', str(img_num).zfill(4)+'.png'))
+        #         self.metaPath.append(os.path.join(
+        #             root, 'scenes', 'scene_'+str(i).zfill(4), camera, 'meta', str(img_num).zfill(4)+'.mat'))
+        #         self.rectLabelPath.append(os.path.join(
+        #             root, 'scenes', 'scene_'+str(i).zfill(4), camera, 'rect', str(img_num).zfill(4)+'.npy'))
+        #         self.sceneName.append('scene_'+str(i).zfill(4))
+        #         self.annId.append(img_num)
 
-        self.objIds = self.getObjIds(self.sceneIds)
+        # self.objIds = self.getObjIds(self.sceneIds)
 
     def __len__(self):
         return len(self.depthPath)

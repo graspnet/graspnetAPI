@@ -562,70 +562,94 @@ def plot_fric_reps(center, view, depth, fric_reps):
     
     
     color1_r = (2-np.clip(all_mu1,0,2))/2 + 0.05 # red for high score
-    color1_g = 0.05
-    color1_b = 0.05
+    color1_g = 0.05*np.ones(all_mu1.shape)
+    color1_b = 0.05*np.ones(all_mu1.shape)
 
-    color2_r = 0.05
+    color2_r = 0.05*np.ones(all_mu2.shape)
     color2_g = (2-np.clip(all_mu2,0,2))/2 + 0.05 # green for high score
-    color2_b = 0.05
+    color2_b = 0.05*np.ones(all_mu2.shape)
 
     angle_inds = np.arange(24)
-    angles = (angle_inds-12)/24)*np.pi
-    views = np.repeat(view,24)
+    angles = ((angle_inds-12)/24)*np.pi
+    views = np.repeat([view],24,axis=0)
     Rotations = batch_viewpoint_params_to_matrix(-views, angles)
-        
+    
+    vertices = []
+    triangles = []
+    colors = []
+    count = 0
     for i in range(24):
-        left = create_mesh_box(depth+depth_base+finger_width, finger_width, height)
-        right = create_mesh_box(depth+depth_base+finger_width, finger_width, height)
-        bottom1 = create_mesh_box(finger_width, all_d1[i], height)
-        bottom2 = create_mesh_box(finger_width, all_d2[i], height)
-        tail = create_mesh_box(tail_length, finger_width, height)
+        if all_mu1[i] > 0:
+            right = create_mesh_box(depth+depth_base+finger_width, finger_width, height)
+            right_points = np.array(right.vertices)
+            right_triangles = np.array(right.triangles) + 8*count
+            count += 1
+            right_points[:,0] -= depth_base + finger_width
+            right_points[:,1] += all_d1[i]
+            right_points[:,2] -= height/2
+            colors_right = np.array([ [color1_r[i],color1_g[i],color1_b[i]] for _ in range(len(right.vertices))])
+            vertices.append(np.dot(Rotations[i], right_points.T).T + center)
+            triangles.append(right_triangles)
+            colors.append(colors_right)
 
-        left_points = np.array(left.vertices)
-        left_triangles = np.array(left.triangles)
-        left_points[:,0] -= depth_base + finger_width
-        left_points[:,1] -= all_d1[i] + finger_width
-        left_points[:,2] -= height/2
-        colors_left = np.array([ [color1_r,color1_g,color1_b] for _ in range(len(left.vertices))])
+            bottom1 = create_mesh_box(finger_width, all_d1[i], height)
+            bottom1_points = np.array(bottom1.vertices)
+            bottom1_triangles = np.array(bottom1.triangles) + 8*count
+            count += 1
+            bottom1_points[:,0] -= finger_width + depth_base
+            # bottom1_points[:,1] -= all_d1[i]
+            bottom1_points[:,2] -= height/2
+            colors_bottom1 = np.array([ [color1_r[i],color1_g[i],color1_b[i]] for _ in range(len(bottom1.vertices))])
+            vertices.append(np.dot(Rotations[i], bottom1_points.T).T + center)
+            triangles.append(bottom1_triangles)
+            colors.append(colors_bottom1)
 
-        right_points = np.array(right.vertices)
-        right_triangles = np.array(right.triangles) + 8
-        right_points[:,0] -= depth_base + finger_width
-        right_points[:,1] += all_d2[i] + finger_width
-        right_points[:,2] -= height/2
-        colors_right = np.array([ [color2_r,color2_g,color2_b] for _ in range(len(right.vertices))])
+            
+        if all_mu2[i] > 0:
+            left = create_mesh_box(depth+depth_base+finger_width, finger_width, height)
+            left_points = np.array(left.vertices)
+            left_triangles = np.array(left.triangles) + 8*count
+            count += 1
+            left_points[:,0] -= depth_base + finger_width
+            left_points[:,1] -= all_d2[i] + finger_width
+            left_points[:,2] -= height/2
+            colors_left = np.array([ [color2_r[i],color2_g[i],color2_b[i]] for _ in range(len(left.vertices))])
+            vertices.append(np.dot(Rotations[i], left_points.T).T + center)
+            triangles.append(left_triangles)
+            colors.append(colors_left)
 
-        bottom1_points = np.array(bottom1.vertices)
-        bottom1_triangles = np.array(bottom1.triangles) + 16
-        bottom1_points[:,0] -= finger_width + depth_base
-        bottom1_points[:,1] -= all_d1[i]
-        bottom1_points[:,2] -= height/2
-        colors_bottom1 = np.array([ [color1_r,color1_g,color1_b] for _ in range(len(bottom1.vertices))])
+            bottom2 = create_mesh_box(finger_width, all_d2[i], height)
+            bottom2_points = np.array(bottom2.vertices)
+            bottom2_triangles = np.array(bottom2.triangles) + 8*count
+            count += 1
+            bottom2_points[:,0] -= finger_width + depth_base
+            bottom2_points[:,1] -= all_d2[i]
+            bottom2_points[:,2] -= height/2
+            colors_bottom2 = np.array([ [color2_r[i],color2_g[i],color2_b[i]] for _ in range(len(bottom2.vertices))])
+            vertices.append(np.dot(Rotations[i], bottom2_points.T).T + center)
+            triangles.append(bottom2_triangles)
+            colors.append(colors_bottom2)
+        
+    tail = create_mesh_box(tail_length, finger_width, height)
+    tail_points = np.array(tail.vertices)
+    tail_triangles = np.array(tail.triangles) + 8*count
+    tail_points[:,0] -= tail_length + finger_width + depth_base
+    tail_points[:,1] -= finger_width / 2
+    tail_points[:,2] -= height/2
+    colors_tail = np.array([ [0.3,0.3,0.3] for _ in range(len(tail.vertices))])
+    vertices.append(np.dot(Rotations[i], tail_points.T).T + center)
+    triangles.append(tail_triangles)
+    colors.append(colors_tail)
 
-        bottom2_points = np.array(bottom2.vertices)
-        bottom2_triangles = np.array(bottom2.triangles) + 24
-        bottom2_points[:,0] -= finger_width + depth_base
-        bottom2_points[:,1] += all_d2[i]
-        bottom2_points[:,2] -= height/2
-        colors_bottom2 = np.array([ [color2_r,color2_g,color2_b] for _ in range(len(bottom2.vertices))])
+    vertices_np = np.concatenate(vertices, axis=0)
+    triangles_np = np.concatenate(triangles, axis=0)
+    colors_np = np.concatenate(colors, axis=0)
 
-        tail_points = np.array(tail.vertices)
-        tail_triangles = np.array(tail.triangles) + 32
-        tail_points[:,0] -= tail_length + finger_width + depth_base
-        tail_points[:,1] -= finger_width / 2
-        tail_points[:,2] -= height/2
-        colors_tail = np.array([ [0.3,0.3,0.3] for _ in range(len(tail.vertices))])
-
-        vertices = np.concatenate([left_points, right_points, bottom_points, tail_points], axis=0)
-        vertices = np.dot(Rotations[i], vertices.T).T + center
-        triangles = np.concatenate([left_triangles, right_triangles, bottom_triangles, tail_triangles], axis=0)
-        colors = np.concatenate([colors_left, colors_right, colors_bottom1, colors_bottom2, colors_tail], axis=0)
-
-    gripper = o3d.geometry.TriangleMesh()
-    gripper.vertices = o3d.utility.Vector3dVector(vertices)
-    gripper.triangles = o3d.utility.Vector3iVector(triangles)
-    gripper.vertex_colors = o3d.utility.Vector3dVector(colors)
-    return gripper
+    rep = o3d.geometry.TriangleMesh()
+    rep.vertices = o3d.utility.Vector3dVector(vertices_np)
+    rep.triangles = o3d.utility.Vector3iVector(triangles_np)
+    rep.vertex_colors = o3d.utility.Vector3dVector(colors_np)
+    return rep
 
 def find_scene_by_model_id(dataset_root, model_id_list):
     picked_scene_names = []
