@@ -323,7 +323,7 @@ def visObjGrasp(dataset_root, obj_idx, num_grasp=10, th=0.5, max_width=0.08, sav
     if show:
         o3d.visualization.draw_geometries([model, *grippers])
 
-def visObjFricReps(dataset_root, obj_idx, num_rep=10, th=0.8, save_folder='save_fig', show=False):
+def visObjFricReps(dataset_root, obj_idx, num_fric_rep=10, th=0.8, save_folder='save_fig', show=False):
     '''
     Author: chenxi-wang, h.s-fang
     
@@ -333,7 +333,7 @@ def visObjFricReps(dataset_root, obj_idx, num_rep=10, th=0.8, save_folder='save_
 
     - obj_idx: int, index of object model
 
-    - num_rep: int, number of sampled representations
+    - num_fric_rep: int, number of sampled representations
 
     - th: float, threshold of averaged friction coefficient of a view
 
@@ -384,13 +384,14 @@ def visObjFricReps(dataset_root, obj_idx, num_rep=10, th=0.8, save_folder='save_
                 depth = 0.005 if d==0 else 0.01*d
                 view = views[v]
                 t = target_point
-                fric_rep = plot_fric_reps(t, view, depth, offset[v,:,d,:])
+                view_rot = viewpoint_params_to_matrix(-view, 0)
+                fric_rep = plot_fric_reps(t, view_rot, depth, offset[v,:,d,:])
                 print(point_ind, v, d)
                 reps.append(fric_rep)
                 flag = True
         if flag:
             cnt += 1
-        if cnt == num_rep:
+        if cnt == num_fric_rep:
             break
 
     vis.add_geometry(model)

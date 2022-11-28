@@ -1,14 +1,15 @@
-__author__ = 'mhgou'
+__author__ = 'mhgou, hsfang'
 
 import numpy as np
 import open3d as o3d
 import copy
 import cv2
 
-from .utils.utils import plot_gripper_pro_max, batch_rgbdxyz_2_rgbxy_depth, get_batch_key_points, batch_key_points_2_tuple, framexy_depth_2_xyz, batch_framexy_depth_2_xyz, center_depth, key_point_2_rotation, batch_center_depth, batch_framexy_depth_2_xyz, batch_key_point_2_rotation
+from .utils.utils import plot_gripper_pro_max, plot_fric_reps, batch_rgbdxyz_2_rgbxy_depth, get_batch_key_points, batch_key_points_2_tuple, framexy_depth_2_xyz, batch_framexy_depth_2_xyz, center_depth, key_point_2_rotation, batch_center_depth, batch_framexy_depth_2_xyz, batch_key_point_2_rotation
 
 GRASP_ARRAY_LEN = 17
 RECT_GRASP_ARRAY_LEN = 7
+FRIC_REP_ARRAY_LEN = 13+24*4+2
 EPS = 1e-8
 
 class Grasp():
@@ -31,7 +32,7 @@ class Grasp():
                 raise TypeError('if only one arg is given, it must be np.ndarray.')
         elif len(args) == 7:
             score, width, height, depth, rotation_matrix, translation, object_id = args
-            self.grasp_array = np.concatenate([np.array((score, width, height, depth)),rotation_matrix.reshape(-1), translation, np.array((object_id)).reshape(-1)]).astype(np.float64)
+            self.grasp_array = np.concatenate([np.array((score, width, height, depth)),rotation_matrix.reshape(-1), translation, np.array([object_id]).reshape(-1)]).astype(np.float64)
         else:
             raise ValueError('only 1 or 7 arguments are accepted')
     
@@ -1079,3 +1080,466 @@ class RectGraspGroup():
         shuffled_rect_grasp_group = RectGraspGroup()
         shuffled_rect_grasp_group.rect_grasp_group_array = copy.deepcopy(shuffled_rect_grasp_group_array[:numGrasp])
         return shuffled_rect_grasp_group
+
+class FricRep():
+    def __init__(self, *args):
+        '''
+        **Input:**
+
+        - args can be a numpy array or tuple of the translation, view_rot, depth, fric_rep, height, object_id
+
+        - the format of numpy array is [translation(3), view_rot(3x3), depth, fric_rep(24x4), height, object_id]
+
+        - the length of the numpy array is 19.
+        '''
+        if len(args) == 0:
+            self.fric_rep_array = np.array([0, 0, 0] + [1, 0, 0, 0, 1, 0, 0, 0, 1] + [0.02] + [0.02, 0.1, 0.02, 0.1]*24 + [0, 0.004, -1], dtype = np.float64)
+        elif len(args) == 1:
+            if type(args[0]) == np.ndarray:
+                self.fric_rep_array = copy.deepcopy(args[0])
+            else:
+                raise TypeError('if only one arg is given, it must be np.ndarray.')
+        elif len(args) == 6:
+            translation, view_rot, depth, fric_rep, height, object_id = args
+            self.fric_rep_array = np.concatenate([translation, view_rot.reshape(-1), np.array([depth]),fric_rep.reshape(-1), np.array([height, object_id]).reshape(-1)]).astype(np.float64)
+        else:
+            raise ValueError('only 1 or 6 arguments are accepted')
+    
+    def __repr__(self):
+        return 'translation:{}\nview_rot:{}\ndepth:{}\nfric_rep:{}\nheight:{}, object id:{}'.format(self.translation, self.view_rot, self.depth, self.fric_rep, self.height, self.object_id)
+
+    @property
+    def translation(self):
+        '''
+        **Output:**
+
+        - np.array of shape (3,) of the translation.
+        '''
+        return self.fric_rep_array[0:3]
+
+    @translation.setter
+    def translation(self, *args):
+        '''
+        **Input:**
+
+        - len(args) == 1: tuple of x, y, z
+
+        - len(args) == 3: float of x, y, z
+        '''
+        if len(args) == 1:
+            self.fric_rep_array[0:3] = np.array(args[0],dtype = np.float64)
+        elif len(args) == 3:
+            self.fric_rep_array[0:3] = np.array(args,dtype = np.float64)
+
+    @property
+    def view_rot(self):
+        '''
+        **Output:**
+
+        - np.array of shape (9, ) of the view_rot.
+        '''
+        return self.fric_rep_array[3:12].reshape((3,3))
+
+    @view_rot.setter
+    def view_rot(self, *args):
+        '''
+        **Input:**
+
+        - len(args) == 1: tuple of 9
+
+        - len(args) == 9: float of 9
+        '''
+        if len(args) == 1:
+            self.fric_rep_array[3:12] = np.array(args[0],dtype = np.float64).reshape(9)
+        elif len(args) == 3:
+            self.fric_rep_array[3:12] = np.array(args,dtype = np.float64)
+
+    @property
+    def depth(self):
+        '''
+        **Output:**
+
+        - float of the depth.
+        '''
+        return float(self.fric_rep_array[12])
+
+    @depth.setter
+    def depth(self, depth):
+        '''
+        **input:**
+
+        - float of the depth.
+        '''
+        self.fric_rep_array[12] = depth
+
+    @property
+    def fric_rep(self):
+        '''
+        **Output:**
+
+        - np.array of shape (24, 4) of the fric representation.
+        '''
+        return self.fric_rep_array[13:13+24*4].reshape((24,4))
+
+    @fric_rep.setter
+    def fric_rep(self, *args):
+        '''
+        **Input:**
+
+        - len(args) == 1: tuple of fric representation
+
+        - len(args) == 24*4: float of fric representation
+        '''
+        if len(args) == 1:
+            self.fric_rep_array[13:13+24*4] = np.array(args[0],dtype = np.float64).reshape(24*4)
+        elif len(args) == 24*4:
+            self.fric_rep_array[13:13+24*4] = np.array(args,dtype = np.float64)
+
+    @property
+    def height(self):
+        '''
+        **Output:**
+
+        - float of the height.
+        '''
+        return float(self.fric_rep_array[13+24*4])
+
+    @height.setter
+    def height(self, height):
+        '''
+        **input:**
+
+        - float of the height.
+        '''
+        self.fric_rep_array[13+24*4] = height
+    
+    @property
+    def object_id(self):
+        '''
+        **Output:**
+
+        - int of the object id that this grasp grasps
+        '''
+        return int(self.fric_rep_array[13+24*4+1])
+
+    @object_id.setter
+    def object_id(self, object_id):
+        '''
+        **Input:**
+
+        - int of the object_id.
+        '''
+        self.fric_rep_array[13+24*4+1] = object_id
+
+    def transform(self, T):
+        '''
+        **Input:**
+
+        - T: np.array of shape (4, 4)
+        
+        **Output:**
+
+        - FricRep instance after transformation, the original FricRep will also be changed.
+        '''
+        rotation = T[:3,:3]
+        translation = T[:3,3]
+        self.translation = np.dot(rotation, self.translation.reshape((3,1))).reshape(-1) + translation
+        self.view_rot = np.dot(rotation, self.view_rot)
+        return self
+
+    def to_open3d_geometry(self, color=None):
+        '''
+        **Input:**
+
+        - color: optional, tuple of shape (3) denotes (r, g, b), e.g., (1,0,0) for red
+
+        **Ouput:**
+
+        - list of open3d.geometry.Geometry of the gripper.
+        '''
+        return plot_fric_reps(self.translation, self.view_rot, self.depth, self.fric_reps)
+
+class FricRepGroup():
+    def __init__(self, *args):
+        '''
+        **Input:**
+
+        - args can be (1) nothing (2) numpy array of grasp group array (3) str of the npy file.
+        '''
+        if len(args) == 0:
+            self.fric_rep_group_array = np.zeros((0, FRIC_REP_ARRAY_LEN), dtype=np.float64)
+        elif len(args) == 1:
+            if isinstance(args[0], np.ndarray):
+                self.fric_rep_group_array = args[0]
+            elif isinstance(args[0], str):
+                self.fric_rep_group_array = np.load(args[0])
+            else:
+                raise ValueError('args must be nothing, numpy array or string.')
+        else:
+            raise ValueError('args must be nothing, numpy array or string.')
+
+    def __len__(self):
+        '''
+        **Output:**
+
+        - int of the length.
+        '''
+        return len(self.fric_rep_group_array)
+
+    def __repr__(self):
+        repr = '----------\FricRep Group, Number={}:\n'.format(self.__len__())
+        if self.__len__() <= 6:
+            for fric_rep_array in self.fric_rep_group_array:
+                repr += FricRep(fric_rep_array).__repr__() + '\n'
+        else:
+            for i in range(3):
+                repr += FricRep(self.fric_rep_group_array[i]).__repr__() + '\n'
+            repr += '......\n'
+            for i in range(3):
+                repr += FricRep(self.fric_rep_group_array[-(3-i)]).__repr__() + '\n'
+        return repr + '----------'
+
+    def __getitem__(self, index):
+        '''
+        **Input:**
+
+        - index: int, slice, list or np.ndarray.
+
+        **Output:**
+
+        - if index is int, return FricRep instance.
+
+        - if index is slice, np.ndarray or list, return FricRepGroup instance.
+        '''
+        if type(index) == int:
+            return FricRep(self.fric_rep_group_array[index])
+        elif type(index) == slice:
+            fricrepgroup = FricRepGroup()
+            fricrepgroup.fric_rep_group_array = copy.deepcopy(self.fric_rep_group_array[index])
+            return fricrepgroup
+        elif type(index) == np.ndarray:
+            return FricRepGroup(self.fric_rep_group_array[index])
+        elif type(index) == list:
+            return FricRepGroup(self.fric_rep_group_array[index])
+        else:
+            raise TypeError('unknown type "{}" for calling __getitem__ for FricRepGroup'.format(type(index)))
+
+
+    @property
+    def translations(self):
+        '''
+        **Output:**
+
+        - np.array of shape (-1,3) of the translations.
+        '''
+        return self.fric_rep_group_array[:,0:3]
+
+    @translations.setter
+    def translations(self, translations):
+        '''
+        **Input:**
+
+        - len(args) == 1: tuple of x, y, z
+
+        - len(args) == 3: float of x, y, z
+        '''
+        assert translations.shape == (len(self), 3)
+        self.fric_rep_group_array[:,0:3] = copy.deepcopy(translations)
+
+    @property
+    def view_rots(self):
+        '''
+        **Output:**
+
+        - np.array of shape (-1, 9) of the view_rots.
+        '''
+        return self.fric_rep_group_array[:,3:12].reshape((-1,3,3))
+
+    @view_rots.setter
+    def view_rots(self, view_rots):
+        '''
+        **Input:**
+
+        - view_rotation matrices of shape (-1,3,3)
+        '''
+        assert view_rots.shape == (len(self), 3, 3)
+        self.fric_rep_group_array[:,3:12] = copy.deepcopy(view_rots.reshape((-1, 9)))
+
+    @property
+    def depths(self):
+        '''
+        **Output:**
+
+        - float of the depths.
+        '''
+        return self.fric_rep_group_array[:,12]
+
+    @depths.setter
+    def depths(self, depth):
+        '''
+        **input:**
+
+        - float of the depths.
+        '''
+        assert depths.size == len(self)
+        self.fric_rep_group_array[:,12] = copy.deepcopy(depths)
+
+    @property
+    def fric_reps(self):
+        '''
+        **Output:**
+
+        - np.array of shape (24, 4) of the fric representations.
+        '''
+        return self.fric_rep_group_array[:,13:13+24*4].reshape((-1,24,4))
+
+    @fric_reps.setter
+    def fric_reps(self, fric_reps):
+        '''
+        **Input:**
+
+        - fric_reps: matrices of fric representations
+        '''
+        assert view_rots.shape == (len(self), 24, 4)
+        self.fric_rep_group_array[:,13:13+24*4] = copy.deepcopy(fric_reps.reshape((-1, 24*4)))
+
+    @property
+    def heights(self):
+        '''
+        **Output:**
+
+        - float of the heights.
+        '''
+        return self.fric_rep_group_array[:,13+24*4]
+
+    @heights.setter
+    def heights(self, heights):
+        '''
+        **input:**
+
+        - float of the heights.
+        '''
+        assert heights.size == len(self)
+        self.fric_rep_group_array[:,13+24*4] = copy.deepcopy(heights)
+    
+    @property
+    def object_ids(self):
+        '''
+        **Output:**
+
+        - int of the object id that this grasp grasps
+        '''
+        return self.fric_rep_group_array[:,13+24*4+1]
+
+    @object_ids.setter
+    def object_ids(self, object_ids):
+        '''
+        **Input:**
+
+        - int of the object_ids.
+        '''
+        assert object_ids.size == len(self)
+        self.fric_rep_group_array[:,13+24*4+1] = copy.deepcopy(object_ids)
+
+    def transform(self, T):
+        '''
+        **Input:**
+
+        - T: np.array of shape (4, 4)
+        
+        **Output:**
+
+        - GraspGroup instance after transformation, the original GraspGroup will also be changed.
+        '''
+        rotation = T[:3,:3]
+        translation = T[:3,3]
+        self.translations = np.dot(rotation, self.translations.T).T + translation # (-1, 3)
+        self.view_rots = np.matmul(rotation, self.view_rots).reshape((-1, 3, 3)) # (-1, 9)
+        return self
+
+    def add(self, element):
+        '''
+        **Input:**
+
+        - element: FricRep instance or FricRepGroup instance.
+        '''
+        if isinstance(element, FricRep):
+            self.fric_rep_group_array = np.concatenate((self.fric_rep_group_array, element.fric_rep_array.reshape((-1, FRIC_REP_ARRAY_LEN))))
+        elif isinstance(element, FricRepGroup):
+            self.fric_rep_group_array = np.concatenate((self.fric_rep_group_array, element.fric_rep_group_array))
+        else:
+            raise TypeError('Unknown type:{}'.format(element))
+        return self
+
+    def remove(self, index):
+        '''
+        **Input:**
+
+        - index: list of the index of fricrep
+        '''
+        self.fric_rep_group_array = np.delete(self.fric_rep_group_array, index, axis = 0)
+        return self
+
+    def from_npy(self, npy_file_path):
+        '''
+        **Input:**
+
+        - npy_file_path: string of the file path.
+        '''
+        self.fric_rep_group_array = np.load(npy_file_path)
+        return self
+
+    def save_npy(self, npy_file_path):
+        '''
+        **Input:**
+
+        - npy_file_path: string of the file path.
+        '''
+        np.save(npy_file_path, self.fric_rep_group_array)
+
+    def to_open3d_geometry_list(self):
+        '''
+        **Output:**
+
+        - list of open3d.geometry.Geometry of the grippers.
+        '''
+        geometry = []
+        for i in range(len(self.fric_rep_group_array)):
+            f = FricRep(self.fric_rep_group_array[i])
+            geometry.append(f.to_open3d_geometry())
+        return geometry
+    
+    def sort_by_non_empty(self, reverse = False):
+        '''
+        **Input:**
+
+        - reverse: bool of order, if False, from high to low, if True, from low to high.
+
+        **Output:**
+
+        - no output but sort the grasp group.
+        '''
+        non_empty = np.sum(self.fric_rep_group_array[:,14:13+24*4:2]>0)
+        index = np.argsort(score)
+        if not reverse:
+            index = index[::-1]
+        self.fric_rep_group_array = self.fric_rep_group_array[index]
+        return self
+
+    def random_sample(self, numFricRep = 20):
+        '''
+        **Input:**
+
+        - numFricRep: int of the number of sampled fric representation.
+
+        **Output:**
+
+        - FricRepGroup instance of sample fric reps.
+        '''
+        if numFricRep > self.__len__():
+            raise ValueError('Number of sampled fricrep should be no more than the total number of fricreps in the group')
+        shuffled_fric_rep_group_array = copy.deepcopy(self.fric_rep_group_array)
+        np.random.shuffle(shuffled_fric_rep_group_array)
+        shuffled_fricrep_group = FricRepGroup()
+        shuffled_fricrep_group.fric_rep_group_array = copy.deepcopy(shuffled_fric_rep_group_array[:numFricRep])
+        return shuffled_fricrep_group

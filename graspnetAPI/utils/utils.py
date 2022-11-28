@@ -534,7 +534,7 @@ def plot_gripper_pro_max(center, R, width, depth, score=1, color=None):
     gripper.vertex_colors = o3d.utility.Vector3dVector(colors)
     return gripper
 
-def plot_fric_reps(center, view, depth, fric_reps):
+def plot_fric_reps(center, view_rot, depth, fric_reps):
     '''
     Author: h.s-fang, chenxi-wang
     
@@ -542,7 +542,7 @@ def plot_fric_reps(center, view, depth, fric_reps):
 
     - center: numpy array of (3,), target point as gripper center
 
-    - view: approach view on the object surface
+    - view_rot: approach view rotation of (3,3) on the object surface
 
     - depth: appraoch depth of gripper
 
@@ -571,14 +571,17 @@ def plot_fric_reps(center, view, depth, fric_reps):
 
     angle_inds = np.arange(24)
     angles = ((angle_inds-12)/24)*np.pi
-    views = np.repeat([view],24,axis=0)
-    Rotations = batch_viewpoint_params_to_matrix(-views, angles)
+    
     
     vertices = []
     triangles = []
     colors = []
     count = 0
     for i in range(24):
+        R1 = np.array([[1, 0, 0],
+                   [0, np.cos(angles[i]), -np.sin(angles[i])],
+                   [0, np.sin(angles[i]), np.cos(angles[i])]])
+        rotation = view_rot.dot(R1)
         if all_mu1[i] > 0:
             right = create_mesh_box(depth+depth_base+finger_width, finger_width, height)
             right_points = np.array(right.vertices)
@@ -588,7 +591,7 @@ def plot_fric_reps(center, view, depth, fric_reps):
             right_points[:,1] += all_d1[i]
             right_points[:,2] -= height/2
             colors_right = np.array([ [color1_r[i],color1_g[i],color1_b[i]] for _ in range(len(right.vertices))])
-            vertices.append(np.dot(Rotations[i], right_points.T).T + center)
+            vertices.append(np.dot(rotation, right_points.T).T + center)
             triangles.append(right_triangles)
             colors.append(colors_right)
 
@@ -600,7 +603,7 @@ def plot_fric_reps(center, view, depth, fric_reps):
             # bottom1_points[:,1] -= all_d1[i]
             bottom1_points[:,2] -= height/2
             colors_bottom1 = np.array([ [color1_r[i],color1_g[i],color1_b[i]] for _ in range(len(bottom1.vertices))])
-            vertices.append(np.dot(Rotations[i], bottom1_points.T).T + center)
+            vertices.append(np.dot(rotation, bottom1_points.T).T + center)
             triangles.append(bottom1_triangles)
             colors.append(colors_bottom1)
 
@@ -614,7 +617,7 @@ def plot_fric_reps(center, view, depth, fric_reps):
             left_points[:,1] -= all_d2[i] + finger_width
             left_points[:,2] -= height/2
             colors_left = np.array([ [color2_r[i],color2_g[i],color2_b[i]] for _ in range(len(left.vertices))])
-            vertices.append(np.dot(Rotations[i], left_points.T).T + center)
+            vertices.append(np.dot(rotation, left_points.T).T + center)
             triangles.append(left_triangles)
             colors.append(colors_left)
 
@@ -626,7 +629,7 @@ def plot_fric_reps(center, view, depth, fric_reps):
             bottom2_points[:,1] -= all_d2[i]
             bottom2_points[:,2] -= height/2
             colors_bottom2 = np.array([ [color2_r[i],color2_g[i],color2_b[i]] for _ in range(len(bottom2.vertices))])
-            vertices.append(np.dot(Rotations[i], bottom2_points.T).T + center)
+            vertices.append(np.dot(rotation, bottom2_points.T).T + center)
             triangles.append(bottom2_triangles)
             colors.append(colors_bottom2)
         
@@ -637,7 +640,7 @@ def plot_fric_reps(center, view, depth, fric_reps):
     tail_points[:,1] -= finger_width / 2
     tail_points[:,2] -= height/2
     colors_tail = np.array([ [0.3,0.3,0.3] for _ in range(len(tail.vertices))])
-    vertices.append(np.dot(Rotations[i], tail_points.T).T + center)
+    vertices.append(np.dot(rotation, tail_points.T).T + center)
     triangles.append(tail_triangles)
     colors.append(colors_tail)
 
