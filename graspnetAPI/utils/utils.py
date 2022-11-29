@@ -546,7 +546,7 @@ def plot_fric_reps(center, view_rot, depth, fric_reps):
 
     - depth: appraoch depth of gripper
 
-    - fric_reps: array of (24, 4): 24x(d1, mu1, d2, mu2), distances to the object surface and the frictions
+    - fric_reps: array of (48, 2): 48x(distance, mu), distances to the object surface and the frictions
 
     **Output:**
 
@@ -558,7 +558,7 @@ def plot_fric_reps(center, view_rot, depth, fric_reps):
     tail_length = 0.04
     depth_base = 0.02
 
-    all_d1, all_mu1, all_d2, all_mu2 = fric_reps[:,0], fric_reps[:,1], fric_reps[:,2], fric_reps[:,3]
+    all_d1, all_mu1, all_d2, all_mu2 = fric_reps[:24,0], fric_reps[:24,1], fric_reps[24:,0], fric_reps[24:,1]
     
     
     color1_r = (2-np.clip(all_mu1,0,2))/2 + 0.05 # red for high score

@@ -1088,12 +1088,12 @@ class FricRep():
 
         - args can be a numpy array or tuple of the translation, view_rot, depth, fric_rep, height, object_id
 
-        - the format of numpy array is [translation(3), view_rot(3x3), depth, fric_rep(24x4), height, object_id]
+        - the format of numpy array is [translation(3), view_rot(3x3), depth, fric_rep(48x2), height, object_id]
 
         - the length of the numpy array is 19.
         '''
         if len(args) == 0:
-            self.fric_rep_array = np.array([0, 0, 0] + [1, 0, 0, 0, 1, 0, 0, 0, 1] + [0.02] + [0.02, 0.1, 0.02, 0.1]*24 + [0, 0.004, -1], dtype = np.float64)
+            self.fric_rep_array = np.array([0, 0, 0] + [1, 0, 0, 0, 1, 0, 0, 0, 1] + [0.02] + [0.02, 0.1]*48 + [0, 0.004, -1], dtype = np.float64)
         elif len(args) == 1:
             if type(args[0]) == np.ndarray:
                 self.fric_rep_array = copy.deepcopy(args[0])
@@ -1177,9 +1177,9 @@ class FricRep():
         '''
         **Output:**
 
-        - np.array of shape (24, 4) of the fric representation.
+        - np.array of shape (48, 2) of the fric representation.
         '''
-        return self.fric_rep_array[13:13+24*4].reshape((24,4))
+        return self.fric_rep_array[13:13+48*2].reshape((48,2))
 
     @fric_rep.setter
     def fric_rep(self, *args):
@@ -1188,12 +1188,12 @@ class FricRep():
 
         - len(args) == 1: tuple of fric representation
 
-        - len(args) == 24*4: float of fric representation
+        - len(args) == 48*2: float of fric representation
         '''
         if len(args) == 1:
-            self.fric_rep_array[13:13+24*4] = np.array(args[0],dtype = np.float64).reshape(24*4)
-        elif len(args) == 24*4:
-            self.fric_rep_array[13:13+24*4] = np.array(args,dtype = np.float64)
+            self.fric_rep_array[13:13+48*2] = np.array(args[0],dtype = np.float64).reshape(48*2)
+        elif len(args) == 48*2:
+            self.fric_rep_array[13:13+48*2] = np.array(args,dtype = np.float64)
 
     @property
     def height(self):
@@ -1202,7 +1202,7 @@ class FricRep():
 
         - float of the height.
         '''
-        return float(self.fric_rep_array[13+24*4])
+        return float(self.fric_rep_array[13+48*2])
 
     @height.setter
     def height(self, height):
@@ -1211,7 +1211,7 @@ class FricRep():
 
         - float of the height.
         '''
-        self.fric_rep_array[13+24*4] = height
+        self.fric_rep_array[13+48*2] = height
     
     @property
     def object_id(self):
@@ -1220,7 +1220,7 @@ class FricRep():
 
         - int of the object id that this grasp grasps
         '''
-        return int(self.fric_rep_array[13+24*4+1])
+        return int(self.fric_rep_array[13+48*2+1])
 
     @object_id.setter
     def object_id(self, object_id):
@@ -1229,7 +1229,7 @@ class FricRep():
 
         - int of the object_id.
         '''
-        self.fric_rep_array[13+24*4+1] = object_id
+        self.fric_rep_array[13+48*2+1] = object_id
 
     def transform(self, T):
         '''
@@ -1389,9 +1389,9 @@ class FricRepGroup():
         '''
         **Output:**
 
-        - np.array of shape (24, 4) of the fric representations.
+        - np.array of shape (-1, 48, 2) of the fric representations.
         '''
-        return self.fric_rep_group_array[:,13:13+24*4].reshape((-1,24,4))
+        return self.fric_rep_group_array[:,13:13+48*2].reshape((-1,48,2))
 
     @fric_reps.setter
     def fric_reps(self, fric_reps):
@@ -1400,8 +1400,8 @@ class FricRepGroup():
 
         - fric_reps: matrices of fric representations
         '''
-        assert view_rots.shape == (len(self), 24, 4)
-        self.fric_rep_group_array[:,13:13+24*4] = copy.deepcopy(fric_reps.reshape((-1, 24*4)))
+        assert view_rots.shape == (len(self), 48, 2)
+        self.fric_rep_group_array[:,13:13+48*2] = copy.deepcopy(fric_reps.reshape((-1, 48*2)))
 
     @property
     def heights(self):
@@ -1410,7 +1410,7 @@ class FricRepGroup():
 
         - float of the heights.
         '''
-        return self.fric_rep_group_array[:,13+24*4]
+        return self.fric_rep_group_array[:,13+48*2]
 
     @heights.setter
     def heights(self, heights):
@@ -1420,7 +1420,7 @@ class FricRepGroup():
         - float of the heights.
         '''
         assert heights.size == len(self)
-        self.fric_rep_group_array[:,13+24*4] = copy.deepcopy(heights)
+        self.fric_rep_group_array[:,13+48*2] = copy.deepcopy(heights)
     
     @property
     def object_ids(self):
@@ -1429,7 +1429,7 @@ class FricRepGroup():
 
         - int of the object id that this grasp grasps
         '''
-        return self.fric_rep_group_array[:,13+24*4+1]
+        return self.fric_rep_group_array[:,13+48*2+1]
 
     @object_ids.setter
     def object_ids(self, object_ids):
@@ -1439,7 +1439,7 @@ class FricRepGroup():
         - int of the object_ids.
         '''
         assert object_ids.size == len(self)
-        self.fric_rep_group_array[:,13+24*4+1] = copy.deepcopy(object_ids)
+        self.fric_rep_group_array[:,13+48*2+1] = copy.deepcopy(object_ids)
 
     def transform(self, T):
         '''
@@ -1519,7 +1519,7 @@ class FricRepGroup():
 
         - no output but sort the grasp group.
         '''
-        non_empty = np.sum(self.fric_rep_group_array[:,14:13+24*4:2]>0)
+        non_empty = np.sum(self.fric_rep_group_array[:,14:13+48*2:2]>0)
         index = np.argsort(score)
         if not reverse:
             index = index[::-1]

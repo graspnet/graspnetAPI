@@ -751,7 +751,7 @@ class GraspNet():
             print('warning: collision_labels are not given, calling self.loadFricCollisionLabels to retrieve them')
             collision_labels = self.loadFricCollisionLabels(sceneId)
 
-        num_views, num_angles, num_depths = 300, 24, 5
+        num_views, num_angles, num_depths = 300, 48, 5
         template_views = generate_views(num_views)
         template_views = template_views[np.newaxis, :, np.newaxis, np.newaxis, :]
         template_views = np.tile(template_views, [1, 1, num_angles, num_depths, 1])
@@ -771,15 +771,11 @@ class GraspNet():
             target_points = np.tile(target_points, [1, num_views, num_depths, 1]).reshape(-1,3)
             views = np.tile(template_views, [num_points, 1, 1, 1, 1]).reshape(-1,)
             depths = np.array([0.005, 0.01, 0.02, 0.03, 0.04]).repeat(num_points*num_views)
-            fric_reps = np.swapaxes(data,2,3).reshape(-1,24,4)
+            fric_reps = np.swapaxes(data,2,3).reshape(-1,48,2)
 
-            grasp_score_min = np.minimum(fric_reps[:,:,1], fric_reps[:,:,3])
-            grasp_score_max = np.maximum(fric_reps[:,:,1], fric_reps[:,:,3])
-            if not(( (grasp_score_min>0) & (grasp_score_max<th ) ).any()):
-                continue
-            sum_mu1, sum_mu2 = np.sum(fric_reps[:,:,1], axis=1), np.sum(fric_reps[:,:,3], axis=1)
-            if sum_mu1 > th*24 or sum_mu1 <= 1 or sum_mu2 > th*24 or sum_mu2 <= 1:
-                continue
+            grasp_score_min = np.minimum(fric_reps[:,:24,1], fric_reps[:,24:,1])
+            grasp_score_max = np.maximum(fric_reps[:,:24,1], fric_reps[:,24:,1])
+            sum_mu1, sum_mu2 = np.sum(fric_reps[:,:24,1], axis=1), np.sum(fric_reps[:,24:,1], axis=1)
 
             mask1 = (np.any((grasp_score_min>0) & (grasp_score_max<fric_coef_thresh),axis=1) & ~(sum_mu1 > th*24 or sum_mu1 <= 1 or sum_mu2 > th*24 or sum_mu2 <= 1))
             target_points = target_points[mask1]
@@ -794,7 +790,7 @@ class GraspNet():
             Rs = np.matmul(np.linalg.inv(camera_pose)[np.newaxis,:3,:3], Rs)
 
             num_fricrep = widths.shape[0]
-            fric_reps = fric_reps.reshape(-1,24*4)
+            fric_reps = fric_reps.reshape(-1,48*2)
             heights = GRASP_HEIGHT * np.ones((num_fricrep,1))
             depths = depths.reshape(-1,1)
             rotations = Rs.reshape((-1,9))

@@ -323,7 +323,7 @@ def visObjGrasp(dataset_root, obj_idx, num_grasp=10, th=0.5, max_width=0.08, sav
     if show:
         o3d.visualization.draw_geometries([model, *grippers])
 
-def visObjFricReps(dataset_root, obj_idx, num_fric_rep=10, th=0.8, save_folder='save_fig', show=False):
+def visObjFricReps(dataset_root, obj_idx, num_fric_rep=3, th=0.8, save_folder='save_fig', show=False):
     '''
     Author: chenxi-wang, h.s-fang
     
@@ -374,11 +374,11 @@ def visObjFricReps(dataset_root, obj_idx, num_fric_rep=10, th=0.8, save_folder='
             np.random.shuffle(depth_inds)
             for d in depth_inds:
                 if flag: break
-                grasp_score_min = np.minimum(offset[v, :, d, 1], offset[v, :, d, 3])
-                grasp_score_max = np.maximum(offset[v, :, d, 1], offset[v, :, d, 3])
+                grasp_score_min = np.minimum(offset[v, :24, d, 1], offset[v, 24:, d, 1])
+                grasp_score_max = np.maximum(offset[v, :24, d, 1], offset[v, 24:, d, 1])
                 if not(( (grasp_score_min>0) & (grasp_score_max<th ) ).any()):
                     continue
-                sum_mu1, sum_mu2 = np.sum(offset[v, :, d, 1]), np.sum(offset[v, :, d, 3])
+                sum_mu1, sum_mu2 = np.sum(offset[v, :24, d, 1]), np.sum(offset[v, 24:, d, 1])
                 if sum_mu1 > th*24 or sum_mu1 <= 1 or sum_mu2 > th*24 or sum_mu2 <= 1:
                     continue
                 depth = 0.005 if d==0 else 0.01*d
