@@ -358,29 +358,29 @@ def visObjFricReps(dataset_root, obj_idx, num_fric_rep=3, th=0.8, save_folder='s
     sampled_points, data = get_model_fricreps('%s/fric_rep/%03d_labels_small.npz'%(dataset_root, obj_idx))
 
     cnt = 0
-    point_inds = np.arange(sampled_points.shape[0])
-    np.random.shuffle(point_inds)
+    point_inds = [735]
+    # np.random.shuffle(point_inds)
     reps = []
 
     for point_ind in point_inds:
         target_point = sampled_points[point_ind]
         offset = data[point_ind]
-        view_inds = np.arange(300)
-        np.random.shuffle(view_inds)
+        view_inds = [252]
+        # np.random.shuffle(view_inds)
         flag = False
         for v in view_inds:
             if flag: break
-            depth_inds = np.arange(5)
-            np.random.shuffle(depth_inds)
+            depth_inds = [0]
+            # np.random.shuffle(depth_inds)
             for d in depth_inds:
                 if flag: break
-                grasp_score_min = np.minimum(offset[v, :24, d, 1], offset[v, 24:, d, 1])
-                grasp_score_max = np.maximum(offset[v, :24, d, 1], offset[v, 24:, d, 1])
-                if not(( (grasp_score_min>0) & (grasp_score_max<th ) ).any()):
-                    continue
-                sum_mu1, sum_mu2 = np.sum(offset[v, :24, d, 1]), np.sum(offset[v, 24:, d, 1])
-                if sum_mu1 > th*24 or sum_mu1 <= 1 or sum_mu2 > th*24 or sum_mu2 <= 1:
-                    continue
+                # grasp_score_min = np.minimum(offset[v, :24, d, 1], offset[v, 24:, d, 1])
+                # grasp_score_max = np.maximum(offset[v, :24, d, 1], offset[v, 24:, d, 1])
+                # if not(( (grasp_score_min>0) & (grasp_score_max<th ) ).any()):
+                #     continue
+                # sum_mu1, sum_mu2 = np.sum(offset[v, :24, d, 1]), np.sum(offset[v, 24:, d, 1])
+                # if sum_mu1 > th*24 or sum_mu1 <= 1 or sum_mu2 > th*24 or sum_mu2 <= 1:
+                #     continue
                 depth = 0.005 if d==0 else 0.01*d
                 view = views[v]
                 t = target_point

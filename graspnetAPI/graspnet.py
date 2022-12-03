@@ -89,19 +89,19 @@ class GraspNet():
         self.split = split
         self.collisionLabels = {}
 
-        if split == 'all':
-            self.sceneIds = list(range(TOTAL_SCENE_NUM))
-        elif split == 'train':
-            self.sceneIds = list(range(100))
-        elif split == 'test':
-            self.sceneIds = list(range(100, 190))
-        elif split == 'test_seen':
-            self.sceneIds = list(range(100, 130))
-        elif split == 'test_similar':
-            self.sceneIds = list(range(130, 160))
-        elif split == 'test_novel':
-            self.sceneIds = list(range(160, 190))
-
+        # if split == 'all':
+        #     self.sceneIds = list(range(TOTAL_SCENE_NUM))
+        # elif split == 'train':
+        #     self.sceneIds = list(range(100))
+        # elif split == 'test':
+        #     self.sceneIds = list(range(100, 190))
+        # elif split == 'test_seen':
+        #     self.sceneIds = list(range(100, 130))
+        # elif split == 'test_similar':
+        #     self.sceneIds = list(range(130, 160))
+        # elif split == 'test_novel':
+        #     self.sceneIds = list(range(160, 190))
+        self.sceneIds = list([180])
         self.rgbPath = []
         self.depthPath = []
         self.segLabelPath = []
@@ -110,22 +110,22 @@ class GraspNet():
         self.sceneName = []
         self.annId = []
 
-        # for i in tqdm(self.sceneIds, desc='Loading data path...'):
-        #     for img_num in range(256):
-        #         self.rgbPath.append(os.path.join(
-        #             root, 'scenes', 'scene_'+str(i).zfill(4), camera, 'rgb', str(img_num).zfill(4)+'.png'))
-        #         self.depthPath.append(os.path.join(
-        #             root, 'scenes', 'scene_'+str(i).zfill(4), camera, 'depth', str(img_num).zfill(4)+'.png'))
-        #         self.segLabelPath.append(os.path.join(
-        #             root, 'scenes', 'scene_'+str(i).zfill(4), camera, 'label', str(img_num).zfill(4)+'.png'))
-        #         self.metaPath.append(os.path.join(
-        #             root, 'scenes', 'scene_'+str(i).zfill(4), camera, 'meta', str(img_num).zfill(4)+'.mat'))
-        #         self.rectLabelPath.append(os.path.join(
-        #             root, 'scenes', 'scene_'+str(i).zfill(4), camera, 'rect', str(img_num).zfill(4)+'.npy'))
-        #         self.sceneName.append('scene_'+str(i).zfill(4))
-        #         self.annId.append(img_num)
+        for i in tqdm(self.sceneIds, desc='Loading data path...'):
+            for img_num in range(256):
+                self.rgbPath.append(os.path.join(
+                    root, 'scenes', 'scene_'+str(i).zfill(4), camera, 'rgb', str(img_num).zfill(4)+'.png'))
+                self.depthPath.append(os.path.join(
+                    root, 'scenes', 'scene_'+str(i).zfill(4), camera, 'depth', str(img_num).zfill(4)+'.png'))
+                self.segLabelPath.append(os.path.join(
+                    root, 'scenes', 'scene_'+str(i).zfill(4), camera, 'label', str(img_num).zfill(4)+'.png'))
+                self.metaPath.append(os.path.join(
+                    root, 'scenes', 'scene_'+str(i).zfill(4), camera, 'meta', str(img_num).zfill(4)+'.mat'))
+                self.rectLabelPath.append(os.path.join(
+                    root, 'scenes', 'scene_'+str(i).zfill(4), camera, 'rect', str(img_num).zfill(4)+'.npy'))
+                self.sceneName.append('scene_'+str(i).zfill(4))
+                self.annId.append(img_num)
 
-        # self.objIds = self.getObjIds(self.sceneIds)
+        self.objIds = self.getObjIds(self.sceneIds)
 
     def __len__(self):
         return len(self.depthPath)
@@ -745,58 +745,92 @@ class GraspNet():
 
         obj_list,pose_list = get_obj_pose_list(camera_pose,pose_vectors)
         if fric_reps is None:
-            print('warning: fric_reps are not given, calling self.loadGraspLabels to retrieve them')
+            print('warning: fric_reps are not given, calling self.loadObjFricReps to retrieve them')
             fric_reps = self.loadObjFricReps(objIds = obj_list)
-        if collision_labels is None:
+        if fric_collision_labels is None:
             print('warning: collision_labels are not given, calling self.loadFricCollisionLabels to retrieve them')
-            collision_labels = self.loadFricCollisionLabels(sceneId)
+            fric_collision_labels = self.loadFricCollisionLabels(sceneId)
 
         num_views, num_angles, num_depths = 300, 48, 5
         template_views = generate_views(num_views)
         template_views = template_views[np.newaxis, :, np.newaxis, np.newaxis, :]
-        template_views = np.tile(template_views, [1, 1, num_angles, num_depths, 1])
-
-        collision_dump = collision_labels['scene_'+str(sceneId).zfill(4)]
+        template_views = np.tile(template_views, [1, 1, 1, num_depths, 1])
+        template_view_inds = np.arange(300)
+        template_view_inds = template_view_inds[np.newaxis, :, np.newaxis, np.newaxis]
+        template_view_inds = np.tile(template_view_inds, [1, 1, 1, num_depths])
+        collision_dump = fric_collision_labels['scene_'+str(sceneId).zfill(4)]
 
         # grasp = dict()
         fric_rep_group = FricRepGroup()
         for i, (obj_idx, trans) in enumerate(zip(obj_list, pose_list)):
-
             sampled_points, datas = fric_reps[obj_idx]
             collision = collision_dump[i]
+            print('00000\n')
             point_inds = np.arange(sampled_points.shape[0])
+            
+            angle_inds = np.arange(48)
+            depth_inds = np.arange(5)
 
             num_points = len(point_inds)
             target_points = sampled_points[:, np.newaxis, np.newaxis, :]
             target_points = np.tile(target_points, [1, num_views, num_depths, 1]).reshape(-1,3)
-            views = np.tile(template_views, [num_points, 1, 1, 1, 1]).reshape(-1,)
+            point_inds = point_inds[:, np.newaxis, np.newaxis]
+            point_inds = np.tile(point_inds, [1, num_views, num_depths]).reshape(-1,1)
+            views = np.tile(template_views, [num_points, 1, 1, 1, 1]).reshape(-1,3)
+            view_inds = np.tile(template_view_inds, [num_points, 1, 1, 1]).reshape(-1,1)
             depths = np.array([0.005, 0.01, 0.02, 0.03, 0.04]).repeat(num_points*num_views)
-            fric_reps = np.swapaxes(data,2,3).reshape(-1,48,2)
+            depth_inds = np.array(depth_inds).repeat(num_points*num_views).reshape(-1,1)
+            circular_reps = np.swapaxes(datas,2,3).reshape(-1,48,2)
+            print('11111\n')
+            collision = np.swapaxes(collision,2,3).reshape(-1,48)
+            print('22222\n')
+            grasp_score_min = np.minimum(circular_reps[:,:24,1], circular_reps[:,24:,1])
+            grasp_score_max = np.maximum(circular_reps[:,:24,1], circular_reps[:,24:,1])
+            sum_mu1, sum_mu2 = np.sum(circular_reps[:,:24,1], axis=1), np.sum(circular_reps[:,24:,1], axis=1)
 
-            grasp_score_min = np.minimum(fric_reps[:,:24,1], fric_reps[:,24:,1])
-            grasp_score_max = np.maximum(fric_reps[:,:24,1], fric_reps[:,24:,1])
-            sum_mu1, sum_mu2 = np.sum(fric_reps[:,:24,1], axis=1), np.sum(fric_reps[:,24:,1], axis=1)
+            mask1 = np.any((grasp_score_min>0) & (grasp_score_max<fric_coef_thresh),axis=1)
+            mask2 = ~((sum_mu1 > fric_coef_thresh*24) | (sum_mu1 <= 1) | (sum_mu2 > fric_coef_thresh*24) | (sum_mu2 <= 1))
+            mask = mask1 & mask2
+            target_points = target_points[mask]
+            point_inds = point_inds[mask]
+            view_inds = view_inds[mask]
+            depth_inds = depth_inds[mask]
+            views = views[mask]
+            depths = depths[mask]
+            circular_reps = circular_reps[mask]
+            collision = collision[mask]
+            print('33333\n')
+            circular_reps[collision.astype("bool"),1] = 2
+            print('44444\n')
+            grasp_score_min = np.minimum(circular_reps[:,:24,1], circular_reps[:,24:,1])
+            grasp_score_max = np.maximum(circular_reps[:,:24,1], circular_reps[:,24:,1])
+            sum_mu1, sum_mu2 = np.sum(circular_reps[:,:24,1], axis=1), np.sum(circular_reps[:,24:,1], axis=1)
 
-            mask1 = (np.any((grasp_score_min>0) & (grasp_score_max<fric_coef_thresh),axis=1) & ~(sum_mu1 > th*24 or sum_mu1 <= 1 or sum_mu2 > th*24 or sum_mu2 <= 1))
-            target_points = target_points[mask1]
+            mask1 = np.any((grasp_score_min>0) & (grasp_score_max<fric_coef_thresh),axis=1) 
+            mask2 = ~((sum_mu1 > fric_coef_thresh*48) | (sum_mu1 <= 1) | (sum_mu2 > fric_coef_thresh*48) | (sum_mu2 <= 1))
+            mask = mask1 & mask2
+            target_points = target_points[mask]
             target_points = transform_points(target_points, trans)
             target_points = transform_points(target_points, np.linalg.inv(camera_pose))
-            views = views[mask1]
-            depths = depths[mask1]
-            fric_reps = fric_reps[mask1]
-
+            point_inds = point_inds[mask]
+            view_inds = view_inds[mask]
+            depth_inds = depth_inds[mask]
+            views = views[mask]
+            depths = depths[mask]
+            circular_reps = circular_reps[mask]
+            print('55555\n')
             Rs = batch_viewpoint_params_to_matrix(-views, np.zeros(len(views)))
             Rs = np.matmul(trans[np.newaxis, :3, :3], Rs)
             Rs = np.matmul(np.linalg.inv(camera_pose)[np.newaxis,:3,:3], Rs)
 
-            num_fricrep = widths.shape[0]
-            fric_reps = fric_reps.reshape(-1,48*2)
+            num_fricrep = depths.shape[0]
+            circular_reps = circular_reps.reshape(-1,48*2)
             heights = GRASP_HEIGHT * np.ones((num_fricrep,1))
             depths = depths.reshape(-1,1)
             rotations = Rs.reshape((-1,9))
-            object_ids = obj_idx * np.ones((num_fricrep,1), dtype=np.int32)
+            object_ids = point_inds*100000 + view_inds*10 + depth_inds#obj_idx * np.ones((num_fricrep,1), dtype=np.int32)
 
-            obj_fric_rep_array = np.hstack([target_points, rotations, depths, fric_reps, heights, object_ids]).astype(np.float32)
+            obj_fric_rep_array = np.hstack([target_points, rotations, depths, circular_reps, heights, object_ids]).astype(np.float32)
 
             fric_rep_group.fric_rep_group_array = np.concatenate((fric_rep_group.fric_rep_group_array, obj_fric_rep_array))
         return fric_rep_group
@@ -936,7 +970,7 @@ class GraspNet():
         for obj_id in objIds:
             visObjFricReps(self.root, obj_id, num_fric_rep=numFricRep, th=th, save_folder=saveFolder, show=show)
 
-    def showSceneFricReps(self, sceneId, camera = 'kinect', annId = 0, numFricRep = 20, show_object = True, coef_fric_thresh = 0.5):
+    def showSceneFricReps(self, sceneId, camera = 'kinect', annId = 0, numFricRep = 10, fric_reps = None, show_object = True, coef_fric_thresh = 0.5):
         '''
         **Input:**
 
@@ -948,14 +982,18 @@ class GraspNet():
 
         - numFricRep: int of the displayed fric-reps number, reps will be randomly sampled.
 
+        - fric_reps: fric representations
+
         - coef_fric_thresh: float of the friction coefficient of rep.
         '''
         geometries = []
-        SceneFricRep = self.loadSceneFricReps(sceneId = sceneId, annId = annId, camera = camera, fric_coef_thresh = coef_fric_thresh)
+        SceneFricRep = self.loadSceneFricReps(sceneId = sceneId, annId = annId, camera = camera, fric_reps = fric_reps, fric_coef_thresh = coef_fric_thresh)
         SceneFricRep = SceneFricRep.random_sample(numFricRep = numFricRep)
         scenePCD = self.loadScenePointCloud(sceneId = sceneId, camera = camera, annId = annId, align = False)
         geometries.append(scenePCD)
         geometries += SceneFricRep.to_open3d_geometry_list()
+        print(int(SceneFricRep.object_ids[0]/100000), int((SceneFricRep.object_ids[0]%100000)/10), int((SceneFricRep.object_ids[0]%10)))
+        print(SceneFricRep.object_ids[0])
         if show_object:
             objectPCD = self.loadSceneModel(sceneId = sceneId, camera = camera, annId = annId, align = False)
             geometries += objectPCD

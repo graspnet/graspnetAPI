@@ -1090,7 +1090,7 @@ class FricRep():
 
         - the format of numpy array is [translation(3), view_rot(3x3), depth, fric_rep(48x2), height, object_id]
 
-        - the length of the numpy array is 19.
+        - the length of the numpy array is 111.
         '''
         if len(args) == 0:
             self.fric_rep_array = np.array([0, 0, 0] + [1, 0, 0, 0, 1, 0, 0, 0, 1] + [0.02] + [0.02, 0.1]*48 + [0, 0.004, -1], dtype = np.float64)
@@ -1220,7 +1220,7 @@ class FricRep():
 
         - int of the object id that this grasp grasps
         '''
-        return int(self.fric_rep_array[13+48*2+1])
+        return self.fric_rep_array[13+48*2+1]
 
     @object_id.setter
     def object_id(self, object_id):
@@ -1257,7 +1257,7 @@ class FricRep():
 
         - list of open3d.geometry.Geometry of the gripper.
         '''
-        return plot_fric_reps(self.translation, self.view_rot, self.depth, self.fric_reps)
+        return plot_fric_reps(self.translation, self.view_rot, self.depth, self.fric_rep)
 
 class FricRepGroup():
     def __init__(self, *args):
