@@ -5,14 +5,14 @@ import os
 
 setup(
     name='graspnetAPI',
-    version='1.2.10',
+    version='1.2.11',
     description='graspnet API',
     author='Hao-Shu Fang, Chenxi Wang, Minghao Gou',
     author_email='gouminghao@gmail.com',
     url='https://graspnet.net',
     packages=find_packages(),
     install_requires=[
-        'numpy',
+        'numpy==1.20.3',
         'scipy',
         'transforms3d==0.3.1',
         'open3d>=0.8.0.0',
@@ -30,7 +30,7 @@ setup(
         'cvxopt',
         'dill',
         'h5py',
-        'sklearn',
+        'scikit-learn',
         'grasp_nms'
     ]
 )

@@ -67,7 +67,7 @@ def _isArrayLike(obj):
 
 
 class GraspNet():
-    def __init__(self, root, camera='kinect', split='train'):
+    def __init__(self, root, camera='kinect', split='train', sceneIds=[]):
         '''
 
         graspnetAPI main class.
@@ -76,10 +76,12 @@ class GraspNet():
 
         - camera: string of type of camera: "kinect" or "realsense"
 
-        - split: string of type of split of dataset: "all", "train", "test", "test_seen", "test_similar" or "test_novel"
+        - split: string of type of split of dataset: "all", "train", "test", "test_seen", "test_similar", "test_novel" or "custom"
+
+        - sceneIds: list of custom scene ids.
         '''
         assert camera in ['kinect', 'realsense'], 'camera should be kinect or realsense'
-        assert split in ['all', 'train', 'test', 'test_seen', 'test_similar', 'test_novel'], 'split should be all/train/test/test_seen/test_similar/test_novel'
+        assert split in ['all', 'train', 'test', 'test_seen', 'test_similar', 'test_novel', "custom"], 'split should be all/train/test/test_seen/test_similar/test_novel'
         self.root = root
         self.camera = camera
         self.split = split
@@ -97,6 +99,8 @@ class GraspNet():
             self.sceneIds = list(range(130, 160))
         elif split == 'test_novel':
             self.sceneIds = list(range(160, 190))
+        elif split == "custom":
+            self.sceneIds = sceneIds
 
         self.rgbPath = []
         self.depthPath = []
