@@ -6,7 +6,7 @@
 Visit the [GraspNet Website](http://graspnet.net) to get the dataset.
 
 ## Install
-You can install using pip.
+You can install using pip. (Note: The pip version might be old, install from the source is recommended.)
 ```bash
 pip install graspnetAPI
 ```
